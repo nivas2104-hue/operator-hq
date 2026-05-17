@@ -2802,24 +2802,101 @@
       // ════════════════════════════════════════════════════════════
       // VIEW RENDERERS
       // ════════════════════════════════════════════════════════════
+      function createQuestSection(title, quests, container) {
+        if (!quests.length) return;
+
+        const section = document.createElement("div");
+
+        section.innerHTML = `
+          <div class="section-head" style="margin-top:14px">
+            // ${title}
+          </div>
+        `;
+
+        const grid = document.createElement("div");
+
+        grid.className = "ql-grid";
+
+        quests.forEach((q) => {
+          grid.appendChild(buildCard(q));
+        });
+
+        section.appendChild(grid);
+
+        container.appendChild(section);
+      }
+
       function renderView(viewId, containerId, filterTags, filterGroupId) {
         const el = document.getElementById(containerId);
+
         if (!el) return;
+
         let activeFilter = "all";
+
         const filterBtns = document.querySelectorAll(
           `#${filterGroupId} .ql-filter`,
         );
+
         filterBtns.forEach((b) => {
-          if (b.classList.contains("active")) activeFilter = b.dataset.f;
+          if (b.classList.contains("active")) {
+            activeFilter = b.dataset.f;
+          }
         });
+
         let quests = G.quests.filter((q) => {
-          if (filterTags && filterTags.length && !filterTags.includes(q.tag))
+          if (filterTags && filterTags.length && !filterTags.includes(q.tag)) {
             return false;
-          if (activeFilter !== "all" && q.tag !== activeFilter) return false;
+          }
+
+          if (activeFilter === "boss") {
+            return (
+              q.freq === "Boss Battle" ||
+              q.freq === "BOSS BATTLE" ||
+              q.freq === "Milestone"
+            );
+          }
+
+          if (activeFilter !== "all" && q.tag !== activeFilter) {
+            return false;
+          }
+
           return true;
         });
+
         el.innerHTML = "";
-        quests.forEach((q) => el.appendChild(buildCard(q)));
+
+        const daily = quests.filter(
+          (q) => q.freq === "DAILY" || q.freq === "Daily",
+        );
+
+        const weekly = quests.filter(
+          (q) => q.freq === "WEEKLY" || q.freq === "Weekly",
+        );
+
+        const side = quests.filter((q) => q.freq === "Side Quest");
+
+        const boss = quests.filter(
+          (q) =>
+            q.freq === "Boss Battle" ||
+            q.freq === "BOSS BATTLE" ||
+            q.freq === "Milestone",
+        );
+
+        const locked = quests.filter((q) => q.locked);
+
+        const completed = quests.filter((q) => q.done);
+
+        createQuestSection("DAILY OPS", daily, el);
+
+        createQuestSection("WEEKLY OPS", weekly, el);
+
+        createQuestSection("SIDE QUESTS", side, el);
+
+        createQuestSection("BOSS BATTLES", boss, el);
+
+        createQuestSection("LOCKED", locked, el);
+
+        createQuestSection("COMPLETED", completed, el);
       }
 
       function renderAllViews() {
