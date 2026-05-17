@@ -2,15 +2,16 @@ exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body);
 
-    // FETCH DATABASE
-    if (body.databaseId) {
+    // ───────────────── QUERY DATABASE ─────────────────
+    if (!body.action) {
+      const { token, databaseId } = body;
+
       const response = await fetch(
-        `https://api.notion.com/v1/databases/${body.databaseId}/query`,
+        `https://api.notion.com/v1/databases/${databaseId}/query`,
         {
           method: "POST",
-
           headers: {
-            Authorization: `Bearer ${body.token}`,
+            Authorization: `Bearer ${token}`,
             "Notion-Version": "2022-06-28",
             "Content-Type": "application/json",
           },
@@ -21,26 +22,23 @@ exports.handler = async (event) => {
 
       return {
         statusCode: 200,
-
         headers: {
           "Access-Control-Allow-Origin": "*",
         },
-
         body: JSON.stringify(data),
       };
     }
 
-    // UPDATE QUEST STATUS
+    // ───────────────── UPDATE PAGE STATUS ─────────────────
     if (body.action === "update") {
-      const statusName = body.completed ? "[03_DECRYPTED]" : "[02_IN_FLIGHT]";
+      const { token, pageId, completed } = body;
 
       const response = await fetch(
-        `https://api.notion.com/v1/pages/${body.pageId}`,
+        `https://api.notion.com/v1/pages/${pageId}`,
         {
           method: "PATCH",
-
           headers: {
-            Authorization: `Bearer ${body.token}`,
+            Authorization: `Bearer ${token}`,
             "Notion-Version": "2022-06-28",
             "Content-Type": "application/json",
           },
@@ -49,7 +47,7 @@ exports.handler = async (event) => {
             properties: {
               Status: {
                 select: {
-                  name: statusName,
+                  name: completed ? "[03_DECRYPTED]" : "[02_IN_FLIGHT]",
                 },
               },
             },
@@ -61,11 +59,9 @@ exports.handler = async (event) => {
 
       return {
         statusCode: 200,
-
         headers: {
           "Access-Control-Allow-Origin": "*",
         },
-
         body: JSON.stringify(data),
       };
     }
@@ -73,13 +69,12 @@ exports.handler = async (event) => {
     return {
       statusCode: 400,
       body: JSON.stringify({
-        error: "Invalid request",
+        error: "Invalid action",
       }),
     };
   } catch (err) {
     return {
       statusCode: 500,
-
       body: JSON.stringify({
         error: err.message,
       }),
