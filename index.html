@@ -2757,9 +2757,14 @@
       // ════════════════════════════════════════════════════════════
       function renderRightPanel() {
         const el = document.getElementById("right-quest-list");
+
         el.innerHTML = "";
-        const active = G.quests.filter((q) => !q.done && !q.locked).slice(0, 8);
-        active.forEach((q) => el.appendChild(buildCard(q)));
+
+        const active = G.quests.filter((q) => !q.locked).slice(0, 8);
+
+        active.forEach((q) => {
+          el.appendChild(buildCard(q));
+        });
       }
 
       // ════════════════════════════════════════════════════════════
