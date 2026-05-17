@@ -3179,6 +3179,7 @@
             if (r.ok && data.results) {
               G.notionToken = token;
               G.notionDbId = dbId;
+              console.log(data.results[0].properties);
 
               G.quests = data.results.map((q) => ({
                 id: q.id,
