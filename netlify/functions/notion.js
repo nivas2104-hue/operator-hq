@@ -18,8 +18,10 @@ exports.handler = async (event) => {
           },
           body: JSON.stringify({
             properties: {
-              Completed: {
-                checkbox: true,
+              Status: {
+                select: {
+                  name: "[03_DECRYPTED]",
+                },
               },
             },
           }),
