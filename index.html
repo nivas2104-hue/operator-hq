@@ -3188,21 +3188,25 @@
                 pageId: q.id,
 
                 name:
-                  q.properties.Name?.title?.[0]?.plain_text || "Untitled Quest",
+                  q.properties["Quest Name"]?.title?.[0]?.plain_text ||
+                  "Untitled Quest",
 
                 xp: q.properties["Base XP"]?.number || 50,
 
                 done: q.properties.Status?.select?.name === "[03_DECRYPTED]",
 
-                freq: q.properties.Frequency?.select?.name || "DAILY",
+                freq: q.properties["Quest Type"]?.select?.name || "QUEST",
 
-                tag: q.properties.Tag?.select?.name?.toLowerCase() || "misc",
+                tag:
+                  q.properties[
+                    "Skill Domain"
+                  ]?.multi_select?.[0]?.name?.toLowerCase() || "misc",
 
                 locked: false,
 
-                criteria: "",
+                criteria: q.properties.Notes?.rich_text?.[0]?.plain_text || "",
 
-                difficulty: "E",
+                difficulty: q.properties.Difficulty?.select?.name || "E",
 
                 prereq: "None",
               }));
