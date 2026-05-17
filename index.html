@@ -591,6 +591,7 @@
         padding: 9px;
         position: relative;
         transition: all 0.2s;
+        font-family: "Rajdhani", sans-serif;
       }
       .qcard:hover {
         border-color: rgba(0, 229, 255, 0.3);
@@ -2758,7 +2759,7 @@
             <span class="qstatus ${sc}">${status}</span>
             <span class="qfreq" style="color:${freqColor[q.freq] || "var(--muted)"}">${q.freq}</span>
           </div>
-          ${q.criteria ? `<div style="font-size:8px;color:var(--muted);margin-top:5px;line-height:1.5;border-top:1px solid var(--border);padding-top:4px">${q.criteria}</div>` : ""}
+${q.criteria ? `<div style="font-size:10px;color:var(--muted);margin-top:5px;line-height:1.5;border-top:1px solid var(--border);padding-top:4px">${q.criteria}</div>` : ""}
          ${showTick ? `<div class="qtick${q.done ? " ticked" : ""}" data-id="${q.id}">✓</div>` : ""}
         `;
         if (showTick && !q.locked) {
@@ -2792,11 +2793,41 @@
 
         el.innerHTML = "";
 
-        const active = G.quests.filter((q) => !q.locked).slice(0, 8);
+        const active = G.quests.filter((q) => !q.done && !q.locked);
 
-        active.forEach((q) => {
-          el.appendChild(buildCard(q));
-        });
+        const daily = active.filter(
+          (q) => q.freq === "DAILY" || q.freq === "Daily",
+        );
+
+        const weekly = active.filter(
+          (q) => q.freq === "WEEKLY" || q.freq === "Weekly",
+        );
+
+        const side = active.filter((q) => q.freq === "Side Quest");
+
+        function addSection(title, quests) {
+          if (!quests.length) return;
+
+          const hdr = document.createElement("div");
+
+          hdr.className = "section-head";
+
+          hdr.style.marginTop = "10px";
+
+          hdr.innerHTML = `// ${title}`;
+
+          el.appendChild(hdr);
+
+          quests.forEach((q) => {
+            el.appendChild(buildCard(q));
+          });
+        }
+
+        addSection("DAILY OPS", daily);
+
+        addSection("WEEKLY OPS", weekly);
+
+        addSection("SIDE QUESTS", side);
       }
 
       // ════════════════════════════════════════════════════════════
