@@ -32,7 +32,7 @@ exports.handler = async (event) => {
 
     // UPDATE QUEST STATUS
     if (body.action === "update") {
-      const statusName = body.completed ? "[03_DECRYPTED]" : "[01_ACTIVE]";
+      const statusName = body.completed ? "[03_DECRYPTED]" : "[02_IN_FLIGHT]";
 
       const response = await fetch(
         `https://api.notion.com/v1/pages/${body.pageId}`,
