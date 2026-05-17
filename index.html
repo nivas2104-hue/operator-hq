@@ -2458,6 +2458,8 @@
       }
 
       let G = loadState();
+      // AUTO RESTORE NOTION CONNECTION
+
       // Reset old v2 data automatically if found (version mismatch already handled above)
 
       // ════════════════════════════════════════════════════════════
@@ -2719,18 +2721,18 @@
           (q.locked ? " locked" : "") +
           (isBoss ? " boss-card" : "");
         d.innerHTML = `
-    <div class="qtop">
-      <span class="qname">${q.name}</span>
-      <span class="qxp">+${q.xp} XP</span>
-    </div>
-    <div class="qmeta">
-      <span class="qtag ${tc}">${q.tag.toUpperCase()}</span>
-      <span class="qstatus ${sc}">${status}</span>
-      <span class="qfreq" style="color:${freqColor[q.freq] || "var(--muted)"}">${q.freq}</span>
-    </div>
-    ${q.criteria ? `<div style="font-size:8px;color:var(--muted);margin-top:5px;line-height:1.5;border-top:1px solid var(--border);padding-top:4px">${q.criteria}</div>` : ""}
-    ${showTick ? `<div class="qtick${q.done ? " ticked" : ""}" data-id="${q.id}">${q.done ? "✓" : ""}</div>` : ""}
-  `;
+          <div class="qtop">
+            <span class="qname">${q.name}</span>
+            <span class="qxp">+${q.xp} XP</span>
+          </div>
+          <div class="qmeta">
+            <span class="qtag ${tc}">${q.tag.toUpperCase()}</span>
+            <span class="qstatus ${sc}">${status}</span>
+            <span class="qfreq" style="color:${freqColor[q.freq] || "var(--muted)"}">${q.freq}</span>
+          </div>
+          ${q.criteria ? `<div style="font-size:8px;color:var(--muted);margin-top:5px;line-height:1.5;border-top:1px solid var(--border);padding-top:4px">${q.criteria}</div>` : ""}
+          ${showTick ? `<div class="qtick${q.done ? " ticked" : ""}" data-id="${q.id}">${q.done ? "✓" : ""}</div>` : ""}
+        `;
         if (showTick && !q.locked && !q.done) {
           const tick = d.querySelector(".qtick");
           if (tick) {
@@ -3208,6 +3210,84 @@
       document.getElementById("notion-modal").addEventListener("click", (e) => {
         if (e.target.id === "notion-modal") closeModal("notion-modal");
       });
+      async function connectToNotion(token, dbId) {
+        const res = document.getElementById("notion-test-result");
+
+        if (!token) {
+          res.textContent = "⚠ Token required.";
+          return;
+        }
+
+        res.textContent = "Testing connection...";
+
+        try {
+          const r = await fetch("/.netlify/functions/notion", {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json",
+            },
+
+            body: JSON.stringify({
+              token: token,
+              databaseId: dbId,
+            }),
+          });
+
+          const data = await r.json();
+
+          console.log(data);
+
+          if (r.ok && data.results) {
+            G.notionToken = token;
+            G.notionDbId = dbId;
+
+            G.quests = data.results.map((q) => ({
+              id: q.id,
+              pageId: q.id,
+
+              name:
+                q.properties["Quest Name"]?.title?.[0]?.plain_text ||
+                "Untitled Quest",
+
+              xp: q.properties["Base XP"]?.number || 50,
+
+              done: q.properties.Status?.select?.name === "[03_DECRYPTED]",
+
+              freq: q.properties["Quest Type"]?.select?.name || "QUEST",
+
+              tag:
+                q.properties[
+                  "Skill Domain"
+                ]?.multi_select?.[0]?.name?.toLowerCase() || "misc",
+
+              locked: false,
+
+              criteria: q.properties.Notes?.rich_text?.[0]?.plain_text || "",
+
+              difficulty: q.properties.Difficulty?.select?.name || "E",
+
+              prereq: "None",
+            }));
+
+            saveState();
+
+            updateUI();
+
+            updateNotionUI();
+
+            closeModal("notion-modal");
+
+            notify("◈ NOTION BRIDGE ACTIVE");
+          } else {
+            res.textContent = "⚠ Connection failed.";
+          }
+        } catch (err) {
+          console.error(err);
+
+          res.textContent = "⚠ Backend bridge error.";
+        }
+      }
 
       document
         .getElementById("notion-save-btn")
@@ -3215,85 +3295,17 @@
           const token = document
             .getElementById("notion-token-input")
             .value.trim();
+
           const dbId = document
             .getElementById("notion-db-input")
             .value.trim()
             .replace(/-/g, "");
-          const res = document.getElementById("notion-test-result");
-          if (!token) {
-            res.textContent = "⚠ Token required.";
-            return;
-          }
-          res.textContent = "Testing connection...";
-          try {
-            const r = await fetch("/.netlify/functions/notion", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                token: token,
-                databaseId: dbId,
-              }),
-            });
 
-            const data = await r.json();
-
-            console.log(data);
-            if (r.ok && data.results) {
-              G.notionToken = token;
-              G.notionDbId = dbId;
-              window.__notionData = data;
-              console.log(data.results[0].properties);
-              console.log(data.results[0].properties);
-
-              G.quests = data.results.map((q) => ({
-                id: q.id,
-                pageId: q.id,
-
-                name:
-                  q.properties["Quest Name"]?.title?.[0]?.plain_text ||
-                  "NO QUEST NAME",
-
-                xp: q.properties["Base XP"]?.number || 50,
-
-                done: q.properties.Status?.select?.name === "[03_DECRYPTED]",
-
-                freq: q.properties["Quest Type"]?.select?.name || "QUEST",
-
-                tag:
-                  q.properties[
-                    "Skill Domain"
-                  ]?.multi_select?.[0]?.name?.toLowerCase() || "misc",
-
-                locked: false,
-
-                criteria: q.properties.Notes?.rich_text?.[0]?.plain_text || "",
-
-                difficulty: q.properties.Difficulty?.select?.name || "E",
-
-                prereq: "None",
-              }));
-              saveState();
-
-              closeModal("notion-modal");
-
-              updateNotionUI();
-
-              render();
-
-              notify("◈ NOTION BRIDGE ACTIVE — LIVE SYNC ENABLED");
-            } else {
-              console.error(data);
-
-              res.textContent = "⚠ Connection failed. Check DB sharing/token.";
-            }
-          } catch (err) {
-            console.error(err);
-
-            res.textContent = "⚠ Backend bridge error.";
-          }
+          connectToNotion(token, dbId);
         });
+      if (G.notionToken && G.notionDbId) {
+        connectToNotion(G.notionToken, G.notionDbId);
+      }
       // ════════════════════════════════════════════════════════════
       // CLOCK + UPTIME
       // ════════════════════════════════════════════════════════════
