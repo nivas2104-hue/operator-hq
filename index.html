@@ -2733,7 +2733,7 @@
           ${q.criteria ? `<div style="font-size:8px;color:var(--muted);margin-top:5px;line-height:1.5;border-top:1px solid var(--border);padding-top:4px">${q.criteria}</div>` : ""}
           ${showTick ? `<div class="qtick${q.done ? " ticked" : ""}" data-id="${q.id}">${q.done ? "✓" : ""}</div>` : ""}
         `;
-        if (showTick && !q.locked && !q.done) {
+        if (showTick && !q.locked) {{
           const tick = d.querySelector(".qtick");
           if (tick) {
             tick.addEventListener("click", (e) => {
