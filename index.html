@@ -2696,10 +2696,19 @@
         "BOSS BATTLE": "var(--red)",
         BACKLOG: "var(--muted)",
       };
+      function checkRequirements(q) {
+        if (!q.requirements) return true;
 
+        if (G.questsDone < q.requirements.minCompleted) {
+          return false;
+        }
+
+        return true;
+      }
       function buildCard(q, showTick = true) {
         const tc = tagCls[q.tag] || "tdsa";
-        const isBoss = q.freq === "BOSS BATTLE";
+        const isBoss = q.freq === "BOSS BATTLE" || q.freq === "Boss Battle";
+        q.locked = !checkRequirements(q);
         const status = q.done
           ? "[DECRYPTED]"
           : q.locked
@@ -2906,10 +2915,16 @@
         if (q.done) {
           G.totalXP += earned;
           G.questsDone++;
+          G.quests.forEach((quest) => {
+            quest.locked = !checkRequirements(quest);
+          });
           G.xpHistory[6] += earned;
         } else {
           G.totalXP -= earned;
           G.questsDone--;
+          G.quests.forEach((quest) => {
+            quest.locked = !checkRequirements(quest);
+          });
           G.xpHistory[6] -= earned;
         }
 
@@ -3271,6 +3286,9 @@
                 ]?.multi_select?.[0]?.name?.toLowerCase() || "misc",
 
               locked: false,
+              requirements: {
+                minCompleted: 0,
+              },
 
               criteria: q.properties.Notes?.rich_text?.[0]?.plain_text || "",
 
@@ -3278,6 +3296,21 @@
 
               prereq: "None",
             }));
+            G.quests.forEach((q) => {
+              if (q.name.includes("Array Pattern Recognition Sprint")) {
+                q.requirements.minCompleted = 5;
+              }
+
+              if (q.name.includes("Linked List Pointer Survival")) {
+                q.requirements.minCompleted = 10;
+              }
+
+              if (q.name.includes("Internship Readiness Checkpoint")) {
+                q.requirements.minCompleted = 25;
+              }
+
+              q.locked = !checkRequirements(q);
+            });
 
             saveState();
 
@@ -3359,7 +3392,9 @@
               ]?.multi_select?.[0]?.name?.toLowerCase() || "misc",
 
             locked: false,
-
+            requirements: {
+              minCompleted: 0,
+            },
             criteria: q.properties.Notes?.rich_text?.[0]?.plain_text || "",
 
             difficulty: q.properties.Difficulty?.select?.name || "E",
@@ -3369,6 +3404,21 @@
 
           // preserve local XP/stats
           G.quests = incoming;
+          G.quests.forEach((q) => {
+            if (q.name.includes("Array Pattern Recognition Sprint")) {
+              q.requirements.minCompleted = 5;
+            }
+
+            if (q.name.includes("Linked List Pointer Survival")) {
+              q.requirements.minCompleted = 10;
+            }
+
+            if (q.name.includes("Internship Readiness Checkpoint")) {
+              q.requirements.minCompleted = 25;
+            }
+
+            q.locked = !checkRequirements(q);
+          });
 
           saveState();
 
