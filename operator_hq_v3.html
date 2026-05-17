@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPERATOR HQ // SYS_OPS v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060a0e;--bg2:#0c1018;--bg3:#101820;--bg4:#0a1220;
+  --green:#00ff88;--green2:#00cc66;--cyan:#00e5ff;--purple:#b060ff;
+  --red:#ff4455;--amber:#ffaa00;--orange:#ff6820;
+  --border:rgba(0,255,136,0.15);--border2:rgba(0,229,255,0.12);
+  --text:#b8d8c0;--muted:#3a5a48;--muted2:#5a7a68;
+  --font:'Share Tech Mono','Courier New',monospace;--head:'Orbitron',monospace;
+}
+html,body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:12px;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:9999}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:7px 18px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:200}
+.logo{color:var(--green);font-family:var(--head);font-size:11px;letter-spacing:4px;white-space:nowrap}
+.logo span{color:var(--cyan)}
+.tdot{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--muted2)}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;animation:blink 2s infinite}
+.dg{background:var(--green);box-shadow:0 0 6px var(--green)}
+.dc{background:var(--cyan);box-shadow:0 0 6px var(--cyan);animation-delay:.6s}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+#clock{color:var(--cyan);font-size:10px;margin-left:auto}
+.ham-btn{display:none;background:none;border:1px solid var(--border);color:var(--green);font-family:var(--font);font-size:11px;padding:3px 7px;cursor:pointer}
+
+/* ── LAYOUT ── */
+.shell{display:grid;grid-template-columns:188px 1fr 256px;min-height:calc(100vh - 33px - 28px);gap:1px;background:var(--border)}
+
+/* ── SIDEBAR ── */
+.sidebar{background:var(--bg);padding:12px 10px;overflow-y:auto;display:flex;flex-direction:column}
+.nav-label{font-size:8px;letter-spacing:3px;color:var(--muted);margin:12px 0 5px;padding-bottom:3px;border-bottom:1px solid var(--border)}
+.nav-item{display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:pointer;font-size:10px;color:var(--muted2);border:1px solid transparent;border-radius:2px;transition:all .15s;margin-bottom:1px}
+.nav-item:hover,.nav-item.active{color:var(--green);border-color:var(--border);background:rgba(0,255,136,.05)}
+.nav-item.active::before{content:'►';font-size:7px;color:var(--green)}
+.sbl{font-size:8px;letter-spacing:2px;color:var(--muted)}
+.sbv{font-size:12px;color:var(--cyan);margin-top:1px}
+.streak-big{font-size:30px;color:var(--amber);font-family:var(--head);text-shadow:0 0 18px rgba(255,170,0,.5)}
+.buff-item{font-size:9px;padding:3px 6px;border-left:2px solid;margin-bottom:3px}
+.ba{border-color:var(--amber);color:var(--amber);background:rgba(255,170,0,.05)}
+.bp{border-color:var(--purple);color:var(--purple);background:rgba(176,96,255,.05)}
+.bc{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.05)}
+.save-line{font-size:8px;color:var(--muted);margin-top:auto;padding-top:10px;border-top:1px solid var(--border)}
+.ok{color:var(--green2)}
+.reset-btn{font-size:8px;color:var(--muted);background:none;border:1px solid transparent;padding:3px 5px;cursor:pointer;font-family:var(--font);letter-spacing:1px;margin-top:6px;transition:all .2s}
+.reset-btn:hover{color:var(--red);border-color:rgba(255,68,85,.3)}
+
+/* ── CENTER ── */
+.center{background:var(--bg);padding:12px;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
+.view{display:none;flex-direction:column;gap:10px}
+.view.active{display:flex}
+.section-head{font-size:8px;letter-spacing:3px;color:var(--green);border-bottom:1px solid var(--border);padding-bottom:7px;font-family:var(--head)}
+
+/* ── CHAR CARD ── */
+.char-card{border:1px solid var(--border);background:linear-gradient(135deg,var(--bg2),var(--bg4));padding:14px;position:relative;overflow:hidden}
+.char-card::after{content:'';position:absolute;top:0;right:0;width:100px;height:100%;background:linear-gradient(270deg,rgba(0,229,255,.04),transparent);pointer-events:none}
+.char-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;gap:10px}
+.char-name{font-size:19px;color:var(--green);letter-spacing:3px;font-family:var(--head);font-weight:900;text-shadow:0 0 18px rgba(0,255,136,.4)}
+.char-class{font-size:9px;color:var(--cyan);letter-spacing:3px;margin-top:3px}
+.rank-pill{background:rgba(176,96,255,.1);border:1px solid rgba(176,96,255,.4);color:var(--purple);font-size:8px;padding:4px 11px;letter-spacing:2px;font-family:var(--head);flex-shrink:0}
+.xp-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.lvl{font-size:26px;color:var(--green);font-family:var(--head);font-weight:900;line-height:1;text-shadow:0 0 14px rgba(0,255,136,.5)}
+.lvl-lbl{font-size:9px;color:var(--muted2)}
+.xp-nums{font-size:10px;color:var(--cyan)}
+.xp-track{background:rgba(0,255,136,.05);border:1px solid var(--border);height:20px;position:relative;overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,rgba(0,255,136,.4),rgba(0,229,255,.6));transition:width .8s cubic-bezier(.4,0,.2,1);border-right:2px solid var(--cyan)}
+.xp-txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;letter-spacing:2px;color:rgba(200,220,200,.85)}
+
+/* ── STAT BOXES ── */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.stat-box{background:var(--bg3);border:1px solid var(--border);padding:8px;text-align:center;position:relative;overflow:hidden;transition:border-color .2s}
+.stat-box::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--ac,var(--cyan));opacity:.4}
+.sv{font-size:17px;color:var(--cyan);font-family:var(--head)}
+.sl{font-size:8px;color:var(--muted);letter-spacing:2px;margin-top:2px}
+
+/* ── MID SECTION ── */
+.mid-section{display:grid;grid-template-columns:130px 1fr;gap:12px;align-items:start}
+.ring-area{display:flex;flex-direction:column;align-items:center;gap:4px}
+.ring-lbl{font-size:8px;letter-spacing:2px;color:var(--muted);text-align:center}
+.ring-pct{font-size:20px;color:var(--green);font-family:var(--head)}
+.sbar-lbl{font-size:8px;letter-spacing:2px;color:var(--muted);margin-bottom:7px}
+.sbar-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.sbar-name{width:66px;font-size:9px;color:var(--text);flex-shrink:0}
+.sbar-track{flex:1;height:7px;background:rgba(0,255,136,.05);border:1px solid var(--border);overflow:hidden}
+.sbar-fill{height:100%;transition:width .8s ease}
+.sbar-val{width:30px;font-size:9px;color:var(--cyan);text-align:right;flex-shrink:0}
+
+/* ── CHART ── */
+.chart-box{border:1px solid var(--border);background:var(--bg2);padding:10px}
+
+/* ── QUEST LIST VIEW (Quest Log / Lab Vault / Gym Terminal) ── */
+.ql-filters{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
+.ql-filter{font-size:8px;padding:2px 8px;border:1px solid var(--border2);color:var(--muted2);background:none;font-family:var(--font);cursor:pointer;letter-spacing:1px;transition:all .15s;border-radius:2px}
+.ql-filter.active{color:var(--cyan);border-color:rgba(0,229,255,.4);background:rgba(0,229,255,.05)}
+.ql-filter:hover{color:var(--cyan)}
+.ql-grid{display:flex;flex-direction:column;gap:6px}
+
+/* ── SKILL TREE VIEW ── */
+.st-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.snode{background:var(--bg2);border:1px solid var(--border);padding:12px;text-align:center;transition:all .2s}
+.snode:hover{border-color:rgba(0,255,136,.35)}
+.sn-ico{font-size:22px;margin-bottom:5px}
+.sn-nm{font-size:8px;letter-spacing:2px;color:var(--muted2);margin-bottom:3px}
+.sn-lv{font-size:19px;color:var(--cyan);font-family:var(--head)}
+.sn-xp{font-size:8px;color:var(--muted);margin-top:2px}
+.sn-bar{width:100%;height:4px;background:rgba(0,255,136,.05);border:1px solid var(--border);margin-top:5px;overflow:hidden}
+.sn-fill{height:100%;transition:width .8s}
+.sn-nxt{font-size:8px;color:var(--amber);margin-top:4px}
+
+/* ── RIGHT PANEL ── */
+.right{background:var(--bg);padding:12px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.panel-lbl{font-size:8px;letter-spacing:3px;color:var(--muted);padding-bottom:5px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+
+/* ── QUEST CARD ── */
+.qcard{border:1px solid var(--border2);background:var(--bg2);padding:9px;position:relative;transition:all .2s}
+.qcard:hover{border-color:rgba(0,229,255,.3);background:var(--bg3)}
+.qcard.done{opacity:.3}
+.qcard.locked{opacity:.45}
+.qcard.boss-card{border-color:rgba(255,68,85,.3);background:rgba(255,68,85,.03)}
+.qcard.boss-card:hover{border-color:rgba(255,68,85,.5)}
+.qtop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;padding-right:26px}
+.qname{font-size:10px;color:var(--text);line-height:1.4}
+.qxp{font-size:10px;color:var(--amber);white-space:nowrap;margin-left:5px;flex-shrink:0}
+.qmeta{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.qtag{font-size:8px;padding:2px 6px;border-radius:2px;letter-spacing:1px}
+.tdsa{background:rgba(255,170,0,.1);color:var(--amber);border:1px solid rgba(255,170,0,.3)}
+.tcyber{background:rgba(0,229,255,.07);color:var(--cyan);border:1px solid rgba(0,229,255,.25)}
+.tbackend{background:rgba(0,255,136,.07);color:var(--green);border:1px solid rgba(0,255,136,.25)}
+.thealth{background:rgba(176,96,255,.08);color:var(--purple);border:1px solid rgba(176,96,255,.3)}
+.tlinux{background:rgba(255,68,85,.07);color:var(--red);border:1px solid rgba(255,68,85,.25)}
+.tisc2{background:rgba(255,104,32,.08);color:var(--orange);border:1px solid rgba(255,104,32,.3)}
+.tconsistency{background:rgba(0,255,136,.05);color:var(--green2);border:1px solid rgba(0,255,136,.2)}
+.tboss{background:rgba(255,68,85,.1);color:var(--red);border:1px solid rgba(255,68,85,.35)}
+.qstatus{font-size:8px;letter-spacing:1px}
+.sif{color:var(--cyan)}.sdone{color:var(--green)}.slocked{color:var(--muted)}.sboss{color:var(--red)}
+.qfreq{font-size:8px;color:var(--muted);margin-left:auto}
+.qtick{position:absolute;top:7px;right:7px;width:18px;height:18px;border:1px solid var(--border2);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s;color:transparent}
+.qtick:hover{border-color:var(--green);background:rgba(0,255,136,.1);color:var(--green)}
+.qtick.ticked{background:rgba(0,255,136,.15);border-color:var(--green);color:var(--green)}
+.add-btn{width:100%;padding:8px;background:transparent;border:1px dashed rgba(0,255,136,.2);color:var(--muted);font-family:var(--font);font-size:10px;cursor:pointer;letter-spacing:2px;transition:all .2s;margin-top:4px}
+.add-btn:hover{border-color:var(--green);color:var(--green);background:rgba(0,255,136,.04)}
+
+/* ── LOG ── */
+.log-entry{border-left:2px solid var(--border);padding:3px 7px;margin-bottom:4px}
+.le-xp{border-color:var(--amber)}
+.le-sys{border-color:var(--muted)}
+.le-boss{border-color:var(--red)}
+.log-time{font-size:8px;color:var(--muted)}
+.log-txt{font-size:9px;color:var(--text);line-height:1.4}
+.log-xp{color:var(--amber)}
+.clr-btn{font-size:8px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--font);letter-spacing:1px}
+.clr-btn:hover{color:var(--red)}
+
+/* ── BOTTOM BAR ── */
+.bottombar{background:var(--bg2);border-top:1px solid var(--border);padding:5px 18px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.bb{font-size:9px;color:var(--muted);display:flex;align-items:center;gap:4px}
+.bbv{color:var(--green)}
+.active-badge{font-size:8px;padding:2px 8px;border:1px solid;border-radius:2px;letter-spacing:1px}
+.ab-warn{border-color:rgba(255,170,0,.4);color:var(--amber);background:rgba(255,170,0,.06)}
+.ab-ok{border-color:rgba(0,255,136,.3);color:var(--green);background:rgba(0,255,136,.05)}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(6,10,14,.93);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg2);border:1px solid var(--green);padding:22px;width:360px;max-width:94vw;position:relative}
+.modal-title{font-family:var(--head);font-size:12px;color:var(--green);letter-spacing:3px;margin-bottom:16px}
+.modal-close{position:absolute;top:10px;right:12px;background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;font-family:var(--font)}
+.modal-close:hover{color:var(--red)}
+.field{margin-bottom:12px}
+.field label{font-size:8px;letter-spacing:2px;color:var(--muted);display:block;margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;padding:7px 9px;outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--green)}
+.field select option{background:var(--bg2)}
+.field textarea{resize:vertical;min-height:50px}
+.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-sub{width:100%;padding:10px;background:rgba(0,255,136,.08);border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:11px;cursor:pointer;letter-spacing:2px;transition:all .2s;margin-top:4px}
+.modal-sub:hover{background:rgba(0,255,136,.16)}
+
+/* ── NOTION PANEL ── */
+.notion-box{background:var(--bg3);border:1px solid var(--border3);padding:12px;margin-top:4px}
+.notion-lbl{font-size:8px;letter-spacing:2px;color:var(--purple);margin-bottom:6px}
+.notion-status{font-size:9px;color:var(--muted);margin-top:4px}
+.notion-btn{font-size:9px;padding:5px 10px;background:rgba(176,96,255,.1);border:1px solid rgba(176,96,255,.3);color:var(--purple);font-family:var(--font);cursor:pointer;letter-spacing:1px;transition:all .2s;margin-top:6px;width:100%}
+.notion-btn:hover{background:rgba(176,96,255,.2)}
+
+/* ── NOTIFY ── */
+#notify{position:fixed;bottom:18px;right:18px;background:var(--bg3);border:1px solid var(--green);color:var(--green);font-family:var(--font);font-size:11px;padding:10px 16px;letter-spacing:1px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;max-width:260px;line-height:1.4}
+#notify.show{opacity:1}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}60%{opacity:1;transform:translateY(-22px) scale(1.08)}100%{opacity:0;transform:translateY(-46px) scale(.9)}}
+.xp-pop{position:fixed;font-family:var(--head);font-size:16px;color:var(--amber);pointer-events:none;animation:floatUp 1.4s ease forwards;z-index:1000;text-shadow:0 0 10px rgba(255,170,0,.7)}
+@keyframes lvlIn{0%{opacity:0;transform:scale(.85)}30%{opacity:1;transform:scale(1.04)}80%{opacity:1}100%{opacity:0;transform:scale(1)}}
+.lvl-flash{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:800;pointer-events:none;animation:lvlIn 2.5s ease forwards}
+.lvl-flash-inner{background:rgba(0,255,136,.08);border:2px solid var(--green);padding:18px 38px;font-family:var(--head);font-size:18px;color:var(--green);letter-spacing:6px;text-shadow:0 0 28px var(--green)}
+
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--muted)}
+
+@media(max-width:780px){
+  .shell{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .sidebar.open{display:flex;position:fixed;left:0;top:33px;bottom:28px;width:185px;z-index:150;border-right:1px solid var(--border);overflow-y:auto}
+  .right{display:none}
+  .right.open{display:flex;position:fixed;right:0;top:33px;bottom:28px;width:250px;z-index:150;border-left:1px solid var(--border)}
+  .ham-btn{display:block}
+  .stat-row{grid-template-columns:repeat(2,1fr)}
+  .mid-section{grid-template-columns:1fr}
+  .st-grid{grid-template-columns:repeat(2,1fr)}
+  #mob-panel-btn{display:block!important}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="ham-btn" id="ham-btn">☰</button>
+  <span class="logo">SYS<span>//</span>OPS · <span>OPERATOR HQ</span></span>
+  <span class="tdot"><span class="dot dg"></span>NEURAL LINK ACTIVE</span>
+  <span class="tdot"><span class="dot dc"></span>TRACKING LIVE</span>
+  <span id="clock" style="margin-left:auto"></span>
+  <button class="ham-btn" id="mob-panel-btn" style="display:none">⊞</button>
+</div>
+
+<div class="shell">
+
+<!-- ── SIDEBAR ── -->
+<div class="sidebar" id="sidebar">
+  <div class="nav-label">// NAVIGATION</div>
+  <div class="nav-item active" data-view="dashboard">⬛ DASHBOARD</div>
+  <div class="nav-item" data-view="questlog">⚔️ QUEST LOG</div>
+  <div class="nav-item" data-view="skilltree">🌐 SKILL TREE</div>
+  <div class="nav-item" data-view="labvault">🔬 LAB VAULT</div>
+  <div class="nav-item" data-view="gym">💪 GYM TERMINAL</div>
+  <div class="nav-item" data-view="archive">🗃️ ARCHIVE</div>
+
+  <div class="nav-label">// SYSTEM</div>
+  <div style="margin-bottom:8px"><div class="sbl">UPTIME</div><div class="sbv" id="uptime">S1 // DAY 01</div></div>
+  <div style="margin-bottom:8px"><div class="sbl">ACTIVE QUESTS</div><div class="sbv" id="sb-active">0 / 3</div></div>
+  <div class="nav-label">// STREAK</div>
+  <div class="streak-big" id="streak-big">0</div>
+  <div class="sbl" style="margin-top:2px;margin-bottom:8px">DAY STREAK 🔥</div>
+  <div class="nav-label">// ACTIVE BUFFS</div>
+  <div class="buff-item ba">⚡ NO-AI BONUS ×1.5</div>
+  <div class="buff-item bp">🔮 DEEP WORK ×1.3</div>
+  <div class="buff-item bc">🔥 STREAK ×1.1</div>
+
+  <div class="nav-label">// NOTION</div>
+  <div class="notion-box">
+    <div class="notion-lbl">NOTION BRIDGE</div>
+    <div class="notion-status" id="notion-status">⬤ DISCONNECTED</div>
+    <button class="notion-btn" id="notion-connect-btn">⊕ CONNECT TOKEN</button>
+  </div>
+
+  <div class="save-line" id="save-status">AUTOSAVE: <span class="ok">●</span> READY</div>
+  <button class="reset-btn" id="reset-btn">⚠ RESET SAVE DATA</button>
+</div>
+
+<!-- ── CENTER ── -->
+<div class="center" id="center">
+
+  <!-- ── DASHBOARD ── -->
+  <div class="view active" id="view-dashboard">
+    <div class="char-card">
+      <div class="char-top">
+        <div>
+          <div class="char-name">OPERATOR_01</div>
+          <div class="char-class">CYBERSECURITY ENGINEER // SEASON 01</div>
+        </div>
+        <div class="rank-pill" id="rank">SYS_NOVICE</div>
+      </div>
+      <div class="xp-row">
+        <div><span class="lvl-lbl">LEVEL </span><span class="lvl" id="lvl">0</span></div>
+        <div class="xp-nums"><span id="xp-curr">0</span> / <span id="xp-next">500</span> XP TO NEXT</div>
+      </div>
+      <div class="xp-track"><div class="xp-fill" id="xp-fill" style="width:0%"></div><div class="xp-txt" id="xp-txt">░░░░░░░░░░ 0%</div></div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-box" style="--ac:var(--amber)"><div class="sv" id="s-xp">0</div><div class="sl">TOTAL XP</div></div>
+      <div class="stat-box" style="--ac:var(--green)"><div class="sv" id="s-done">0</div><div class="sl">QUESTS DONE</div></div>
+      <div class="stat-box" style="--ac:var(--orange)"><div class="sv" id="s-streak">0</div><div class="sl">STREAK</div></div>
+      <div class="stat-box" style="--ac:var(--purple)"><div class="sv" id="s-skills">0</div><div class="sl">SKILLS LVL</div></div>
+    </div>
+
+    <div class="mid-section">
+      <div class="ring-area">
+        <div class="ring-lbl">DAILY PROGRESS</div>
+        <canvas id="ring" width="120" height="120"></canvas>
+        <div class="ring-pct" id="ring-pct">0%</div>
+        <div class="ring-lbl" id="ring-sub">0 / 0</div>
+      </div>
+      <div>
+        <div class="sbar-lbl">// SKILL LEVELS</div>
+        <div class="sbar-row"><span class="sbar-name">DSA</span><div class="sbar-track"><div class="sbar-fill" id="sb-dsa" style="width:0%;background:var(--amber)"></div></div><span class="sbar-val" id="sv-dsa">LV1</span></div>
+        <div class="sbar-row"><span class="sbar-name">CYBERSEC</span><div class="sbar-track"><div class="sbar-fill" id="sb-cyber" style="width:0%;background:var(--cyan)"></div></div><span class="sbar-val" id="sv-cyber">LV1</span></div>
+        <div class="sbar-row"><span class="sbar-name">ISC2 CC</span><div class="sbar-track"><div class="sbar-fill" id="sb-isc2" style="width:0%;background:var(--orange)"></div></div><span class="sbar-val" id="sv-isc2">LV1</span></div>
+        <div class="sbar-row"><span class="sbar-name">DEBUGGING</span><div class="sbar-track"><div class="sbar-fill" id="sb-debug" style="width:0%;background:var(--purple)"></div></div><span class="sbar-val" id="sv-debug">LV1</span></div>
+        <div class="sbar-row"><span class="sbar-name">HEALTH</span><div class="sbar-track"><div class="sbar-fill" id="sb-health" style="width:0%;background:var(--red)"></div></div><span class="sbar-val" id="sv-health">LV1</span></div>
+        <div class="sbar-row"><span class="sbar-name">LINUX</span><div class="sbar-track"><div class="sbar-fill" id="sb-linux" style="width:0%;background:var(--muted2)"></div></div><span class="sbar-val" id="sv-linux">LV1</span></div>
+      </div>
+    </div>
+
+    <div class="chart-box">
+      <div style="font-size:8px;letter-spacing:3px;color:var(--muted);margin-bottom:7px">// XP GAINED — LAST 7 DAYS</div>
+      <div style="position:relative;width:100%;height:95px"><canvas id="linechart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── QUEST LOG ── -->
+  <div class="view" id="view-questlog">
+    <div class="section-head">// QUEST LOG — ALL MISSIONS</div>
+    <div class="ql-filters" id="ql-filters-questlog">
+      <button class="ql-filter active" data-f="all">ALL</button>
+      <button class="ql-filter" data-f="dsa">DSA</button>
+      <button class="ql-filter" data-f="cyber">CYBER</button>
+      <button class="ql-filter" data-f="isc2">ISC2</button>
+      <button class="ql-filter" data-f="consistency">CONSISTENCY</button>
+      <button class="ql-filter" data-f="boss">BOSS</button>
+    </div>
+    <div class="ql-grid" id="ql-questlog"></div>
+  </div>
+
+  <!-- ── SKILL TREE ── -->
+  <div class="view" id="view-skilltree">
+    <div class="section-head">// SKILL TREE — PROGRESSION MATRIX</div>
+    <div class="st-grid" id="st-grid"></div>
+    <div class="chart-box" style="margin-top:4px">
+      <div style="font-size:8px;letter-spacing:2px;color:var(--muted);margin-bottom:6px">// RECENT SKILL XP</div>
+      <div id="skill-log-panel" style="font-size:9px;color:var(--muted2);line-height:1.9"></div>
+    </div>
+  </div>
+
+  <!-- ── LAB VAULT ── -->
+  <div class="view" id="view-labvault">
+    <div class="section-head">// LAB VAULT — CYBERSECURITY + LINUX MISSIONS</div>
+    <div class="ql-filters" id="ql-filters-labvault">
+      <button class="ql-filter active" data-f="all">ALL</button>
+      <button class="ql-filter" data-f="cyber">CYBER</button>
+      <button class="ql-filter" data-f="linux">LINUX</button>
+      <button class="ql-filter" data-f="isc2">ISC2</button>
+      <button class="ql-filter" data-f="boss">BOSS</button>
+    </div>
+    <div class="ql-grid" id="ql-labvault"></div>
+  </div>
+
+  <!-- ── GYM TERMINAL ── -->
+  <div class="view" id="view-gym">
+    <div class="section-head">// GYM TERMINAL — CONSISTENCY SYSTEM</div>
+    <div class="ql-grid" id="ql-gym"></div>
+  </div>
+
+  <!-- ── ARCHIVE ── -->
+  <div class="view" id="view-archive">
+    <div class="section-head">// ARCHIVE — COMPLETED MISSIONS</div>
+    <div class="ql-grid" id="ql-archive"></div>
+    <div id="archive-empty" style="font-size:10px;color:var(--muted);display:none;padding:20px;text-align:center">NO COMPLETED MISSIONS YET. GET TO WORK, OPERATOR.</div>
+  </div>
+
+</div>
+
+<!-- ── RIGHT PANEL ── -->
+<div class="right" id="right">
+  <div>
+    <div class="panel-lbl">// ACTIVE MISSIONS <span id="active-count" style="color:var(--cyan)">0</span></div>
+    <div id="right-quest-list"></div>
+    <button class="add-btn" id="add-btn">+ INJECT QUEST</button>
+  </div>
+  <div>
+    <div class="panel-lbl">// SYSTEM LOG <button class="clr-btn" id="clr-log">CLEAR</button></div>
+    <div id="log-list"></div>
+  </div>
+  <div>
+    <div class="panel-lbl">// NOTION STATUS</div>
+    <div id="notion-right-status" style="font-size:9px;color:var(--muted2);line-height:1.8">
+      <div>⬤ <span style="color:var(--muted)">Notion bridge: disconnected</span></div>
+      <div style="margin-top:6px;font-size:8px;color:var(--muted)">To connect: click NOTION BRIDGE in sidebar → paste your Integration Token. Sync pulls your Notion quest database into this dashboard.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end shell -->
+
+<div class="bottombar">
+  <div class="bb">OP: <span class="bbv">OPERATOR_01</span></div>
+  <div class="bb">SEASON: <span class="bbv">01</span></div>
+  <div class="bb">XP/DAY: <span class="bbv" id="xp-rate">+0</span></div>
+  <div class="bb" id="active-indicator" style="margin-left:auto"></div>
+</div>
+
+<!-- ── QUEST MODAL ── -->
+<div class="overlay" id="quest-modal">
+  <div class="modal">
+    <button class="modal-close" id="modal-close">✕</button>
+    <div class="modal-title">// INJECT QUEST</div>
+    <div class="field"><label>MISSION NAME</label><input type="text" id="q-name" placeholder="Describe the objective..." maxlength="100"></div>
+    <div class="modal-row">
+      <div class="field"><label>BASE XP</label><input type="number" id="q-xp" value="50" min="10" max="600"></div>
+      <div class="field"><label>CATEGORY</label>
+        <select id="q-tag">
+          <option value="dsa">DSA</option>
+          <option value="cyber">CYBER</option>
+          <option value="isc2">ISC2</option>
+          <option value="consistency">CONSISTENCY</option>
+          <option value="linux">LINUX</option>
+          <option value="debug">DEBUG</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div class="field"><label>FREQUENCY</label>
+        <select id="q-freq">
+          <option value="DAILY">DAILY</option>
+          <option value="WEEKLY">WEEKLY</option>
+          <option value="SIDE QUEST">SIDE QUEST</option>
+          <option value="BOSS BATTLE">BOSS BATTLE</option>
+          <option value="BACKLOG">BACKLOG</option>
+        </select>
+      </div>
+      <div class="field"><label>START STATE</label>
+        <select id="q-locked">
+          <option value="active">ACTIVE</option>
+          <option value="locked">LOCKED</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>COMPLETION CRITERIA (optional)</label><textarea id="q-criteria" placeholder="What does done look like?"></textarea></div>
+    <button class="modal-sub" id="modal-submit">⚡ INJECT INTO SYSTEM</button>
+  </div>
+</div>
+
+<!-- ── NOTION TOKEN MODAL ── -->
+<div class="overlay" id="notion-modal">
+  <div class="modal" style="border-color:var(--purple)">
+    <button class="modal-close" id="notion-modal-close">✕</button>
+    <div class="modal-title" style="color:var(--purple)">// NOTION BRIDGE</div>
+    <div style="font-size:9px;color:var(--muted2);margin-bottom:14px;line-height:1.7">
+      Enter your Notion Internal Integration Token. It is stored ONLY in your browser's localStorage and never sent anywhere except Notion's API.
+    </div>
+    <div class="field"><label>INTEGRATION TOKEN</label><input type="password" id="notion-token-input" placeholder="secret_..."></div>
+    <div class="field"><label>QUEST DATABASE ID (optional)</label><input type="text" id="notion-db-input" placeholder="32-char Notion database ID"></div>
+    <button class="modal-sub" id="notion-save-btn" style="border-color:var(--purple);color:var(--purple);background:rgba(176,96,255,.08)">⊕ SAVE & TEST CONNECTION</button>
+    <div id="notion-test-result" style="font-size:9px;color:var(--muted);margin-top:8px"></div>
+  </div>
+</div>
+
+<div id="notify"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════════════════════
+const RANKS=[[0,'SYS_NOVICE'],[300,'APPRENTICE'],[900,'CODE_BUILDER'],[2000,'ENGINEER'],[4500,'SPECIALIST'],[8000,'ARCHITECT'],[14000,'SECURITY_KNIGHT'],[22000,'SYSTEM_SAGE'],[35000,'CYBER_LORD']];
+const LVL_XP=[0,300,700,1200,1800,2500,3400,4500,5800,7300,9000,11000,13500,16500,20000,24000,29000,35000,42000,50000];
+const SKILL_XP=[0,80,240,480,800,1200,1700,2300,3000,3800,4700];
+const BUFF=1.5*1.3*1.1; // 2.145x total
+const SAVE_KEY='op_hq_v3';
+const MAX_ACTIVE=3;
+
+const SKILL_META={
+  dsa:{name:'DSA',icon:'⚔️',color:'var(--amber)',bar:'sb-dsa',val:'sv-dsa'},
+  cyber:{name:'CYBERSEC',icon:'🔐',color:'var(--cyan)',bar:'sb-cyber',val:'sv-cyber'},
+  isc2:{name:'ISC2 CC',icon:'🛡️',color:'var(--orange)',bar:'sb-isc2',val:'sv-isc2'},
+  debug:{name:'DEBUGGING',icon:'🔬',color:'var(--purple)',bar:'sb-debug',val:'sv-debug'},
+  health:{name:'HEALTH',icon:'💪',color:'var(--red)',bar:'sb-health',val:'sv-health'},
+  linux:{name:'LINUX',icon:'🐧',color:'var(--muted2)',bar:'sb-linux',val:'sv-linux'},
+};
+
+// ════════════════════════════════════════════════════════════
+// MASTER QUEST DATABASE
+// ════════════════════════════════════════════════════════════
+const MASTER_QUESTS=[
+
+// ─── DSA ─────────────────────────────────────────────────
+{id:'dsa-01',name:'Arrays: Dry-run 3 Easy problems on paper before coding',tag:'dsa',xp:40,freq:'DAILY',locked:false,done:false,criteria:'Trace execution on paper, identify edge cases (empty, single element, duplicates), then code. All 3 pass on first attempt.',difficulty:'E',prereq:'None'},
+{id:'dsa-02',name:'Arrays: Solve 2 Easy problems independently, no hints',tag:'dsa',xp:50,freq:'DAILY',locked:false,done:false,criteria:'Submit both. No editorial until after submission attempt.',difficulty:'E',prereq:'dsa-01'},
+{id:'dsa-03',name:'Arrays: Explain your solution aloud as if teaching it',tag:'dsa',xp:30,freq:'DAILY',locked:false,done:false,criteria:'Record a voice note or speak to yourself. Cover: approach, time/space complexity, edge cases.',difficulty:'E',prereq:'dsa-02'},
+{id:'dsa-04',name:'Strings: Solve 3 Easy string problems (anagram, reverse, palindrome)',tag:'dsa',xp:55,freq:'DAILY',locked:false,done:false,criteria:'All 3 AC. Identify string-specific edge cases: empty string, spaces, case sensitivity.',difficulty:'E',prereq:'dsa-03'},
+{id:'dsa-05',name:'Hashmaps: Re-solve 2 Array problems using HashMap approach',tag:'dsa',xp:60,freq:'WEEKLY',locked:false,done:false,criteria:'Refactor brute-force O(n²) to O(n) using dict/map. Verify time/space improvement.',difficulty:'E',prereq:'dsa-04'},
+{id:'dsa-06',name:'Two Pointers: Solve 2 classic problems (Two Sum II, Container With Most Water)',tag:'dsa',xp:70,freq:'WEEKLY',locked:false,done:false,criteria:'Implement without hints. Trace pointer movement on a diagram first.',difficulty:'M',prereq:'dsa-05'},
+{id:'dsa-07',name:'Sliding Window: Implement fixed-size window on a subarray problem',tag:'dsa',xp:70,freq:'WEEKLY',locked:false,done:false,criteria:'Solve Max Sum Subarray of size K. Draw the window movement before coding.',difficulty:'M',prereq:'dsa-06'},
+{id:'dsa-08',name:'Sliding Window: Solve variable-size window problem (Longest Substring No Repeat)',tag:'dsa',xp:80,freq:'WEEKLY',locked:false,done:false,criteria:'AC. Document the expand/shrink logic in comments inside your code.',difficulty:'M',prereq:'dsa-07'},
+{id:'dsa-09',name:'Stack: Implement a stack from scratch, solve Valid Parentheses',tag:'dsa',xp:60,freq:'WEEKLY',locked:true,done:false,criteria:'Custom stack class + LC Valid Parentheses AC. Explain LIFO use-case.',difficulty:'E',prereq:'dsa-08'},
+{id:'dsa-10',name:'Queue: Implement queue, solve first non-repeating character in stream',tag:'dsa',xp:70,freq:'WEEKLY',locked:true,done:false,criteria:'Queue class + problem AC. Explain FIFO use-case vs stack.',difficulty:'E',prereq:'dsa-09'},
+{id:'dsa-11',name:'Recursion: Write recursive solutions for factorial, fibonacci, power(x,n)',tag:'dsa',xp:65,freq:'WEEKLY',locked:true,done:false,criteria:'All 3 working. Draw call stack on paper for fibonacci(4).',difficulty:'M',prereq:'dsa-10'},
+{id:'dsa-12',name:'Linked List: Implement singly linked list + reverse it',tag:'dsa',xp:85,freq:'WEEKLY',locked:true,done:false,criteria:'Custom class with insert/delete/reverse. Reverse runs in O(n) space O(1).',difficulty:'M',prereq:'dsa-11'},
+{id:'dsa-13',name:'Binary Search: Implement from scratch, solve 2 LC problems',tag:'dsa',xp:80,freq:'WEEKLY',locked:true,done:false,criteria:'No library calls. Solve Search in Rotated Sorted Array + Binary Search. AC both.',difficulty:'M',prereq:'dsa-12'},
+{id:'dsa-14',name:'Trees: Implement BST insert/search, solve inorder traversal',tag:'dsa',xp:90,freq:'WEEKLY',locked:true,done:false,criteria:'Custom BST class + LC 94 (Inorder Traversal) AC. Draw the tree for test case.',difficulty:'M',prereq:'dsa-13'},
+{id:'dsa-15',name:'Trees: Solve 2 BFS/DFS tree problems (Level Order, Max Depth)',tag:'dsa',xp:100,freq:'WEEKLY',locked:true,done:false,criteria:'Both AC. Identify which traversal is more natural for each problem and explain why.',difficulty:'M',prereq:'dsa-14'},
+
+// DSA BOSS BATTLES
+{id:'dsa-boss-01',name:'[BOSS] Arrays & Strings Mastery — Solve 1 Medium completely independently',tag:'boss',xp:200,freq:'BOSS BATTLE',locked:true,done:false,criteria:'1 Medium LC (Arrays or Strings). No hints. No editorial before submission. AC on ≤2 attempts. Write post-mortem.',difficulty:'B',prereq:'dsa-05'},
+{id:'dsa-boss-02',name:'[BOSS] Two Pointers + Sliding Window — Solve 2 Mediums in 90 min',tag:'boss',xp:280,freq:'BOSS BATTLE',locked:true,done:false,criteria:'Both AC within 90 minutes total. Document approach + edge cases for each.',difficulty:'B',prereq:'dsa-08'},
+{id:'dsa-boss-03',name:'[BOSS] Full DSA Sprint — Solve 3 Mixed problems (Easy+Medium+Medium) in 2h',tag:'boss',xp:400,freq:'BOSS BATTLE',locked:true,done:false,criteria:'All AC. Cover at least 2 different topic areas. Write complexity analysis for all 3.',difficulty:'B',prereq:'dsa-15'},
+
+// ─── CYBER / TRYHACKME ──────────────────────────────────
+{id:'cyber-01',name:'THM: Complete "Linux Fundamentals Part 1" room',tag:'cyber',xp:60,freq:'SIDE QUEST',locked:false,done:false,criteria:'Room 100% complete. Note: 5 commands you didn\'t know before.',difficulty:'E',prereq:'None'},
+{id:'cyber-02',name:'THM: Complete "Linux Fundamentals Part 2" room',tag:'cyber',xp:65,freq:'SIDE QUEST',locked:false,done:false,criteria:'Room 100% complete. Practice file permissions and find commands.',difficulty:'E',prereq:'cyber-01'},
+{id:'cyber-03',name:'THM: Complete "Linux Fundamentals Part 3" room',tag:'cyber',xp:65,freq:'SIDE QUEST',locked:false,done:false,criteria:'Room 100% complete. Understand cron jobs, processes, package management.',difficulty:'E',prereq:'cyber-02'},
+{id:'cyber-04',name:'Linux Lab: Navigate filesystem, find SUID binaries, read /etc/passwd',tag:'linux',xp:55,freq:'SIDE QUEST',locked:false,done:false,criteria:'On any Linux VM: enumerate SUID files (find / -perm -u=s), understand /etc/passwd columns.',difficulty:'E',prereq:'cyber-01'},
+{id:'cyber-05',name:'THM: Complete "Pre-Security" path — Networking fundamentals section',tag:'cyber',xp:70,freq:'SIDE QUEST',locked:false,done:false,criteria:'TCP/IP, OSI model, DNS, HTTP modules complete. Write a 1-page cheatsheet.',difficulty:'E',prereq:'cyber-03'},
+{id:'cyber-06',name:'Networking Lab: Use Wireshark to capture and label 10 packets',tag:'cyber',xp:80,freq:'SIDE QUEST',locked:false,done:false,criteria:'Capture HTTP/DNS/TCP traffic on local machine. Label: protocol, src/dst IP, port, payload summary.',difficulty:'E',prereq:'cyber-05'},
+{id:'cyber-07',name:'THM: Complete "Nmap" room fully',tag:'cyber',xp:75,freq:'SIDE QUEST',locked:false,done:false,criteria:'All tasks complete. Practice: SYN scan, service version scan, OS detection.',difficulty:'E',prereq:'cyber-05'},
+{id:'cyber-08',name:'Nmap Lab: Scan your own VM, document findings in a simple report',tag:'cyber',xp:70,freq:'SIDE QUEST',locked:false,done:false,criteria:'Report includes: open ports, services, banner info, potential attack surface.',difficulty:'E',prereq:'cyber-07'},
+{id:'cyber-09',name:'THM: Complete "Burp Suite: The Basics" room',tag:'cyber',xp:80,freq:'SIDE QUEST',locked:true,done:false,criteria:'Setup complete, intercept a request, understand repeater + intruder.',difficulty:'E',prereq:'cyber-06'},
+{id:'cyber-10',name:'OWASP Lab: Identify and explain 3 OWASP Top 10 vulnerabilities from a real CVE',tag:'cyber',xp:90,freq:'SIDE QUEST',locked:true,done:false,criteria:'For each: explain the vulnerability, impact, remediation. Write up in notes.',difficulty:'M',prereq:'cyber-09'},
+{id:'cyber-11',name:'THM: Complete "OWASP Top 10 - 2021" room',tag:'cyber',xp:100,freq:'SIDE QUEST',locked:true,done:false,criteria:'All 10 categories completed. Map each to a real-world example.',difficulty:'M',prereq:'cyber-10'},
+{id:'cyber-12',name:'HTTP Lab: Use curl to manually craft GET/POST requests, analyze headers',tag:'cyber',xp:70,freq:'SIDE QUEST',locked:true,done:false,criteria:'Test on httpbin.org. Understand: status codes, headers, cookies, auth tokens in requests.',difficulty:'E',prereq:'cyber-09'},
+{id:'cyber-13',name:'THM: Complete "Introductory Networking" room',tag:'cyber',xp:75,freq:'SIDE QUEST',locked:false,done:false,criteria:'Full room complete. Understand subnetting, ARP, routing at a conceptual level.',difficulty:'E',prereq:'cyber-05'},
+{id:'cyber-14',name:'Packet Analysis: Analyze a PCAP file, identify anomalous traffic',tag:'cyber',xp:95,freq:'SIDE QUEST',locked:true,done:false,criteria:'Use a sample PCAP (Wireshark sample files). Identify: protocol, any suspicious patterns, write 5-line summary.',difficulty:'M',prereq:'cyber-06'},
+{id:'cyber-15',name:'THM: Complete beginner CTF "Pickle Rick" room',tag:'cyber',xp:120,freq:'SIDE QUEST',locked:true,done:false,criteria:'All flags captured. Document methodology: recon → enumeration → exploitation → flag.',difficulty:'M',prereq:'cyber-11'},
+{id:'cyber-16',name:'API Security: Read OWASP API Top 10, explain 3 to yourself aloud',tag:'cyber',xp:80,freq:'SIDE QUEST',locked:true,done:false,criteria:'Cover: Broken Object Level Auth, Mass Assignment, and one more. Connect to your backend project experience.',difficulty:'M',prereq:'cyber-12'},
+{id:'cyber-17',name:'SOC Lab: Read a sample IDS/firewall log, identify 3 suspicious events',tag:'cyber',xp:90,freq:'SIDE QUEST',locked:true,done:false,criteria:'Use any public log sample. Classify: benign, suspicious, malicious. Justify each decision.',difficulty:'M',prereq:'cyber-13'},
+
+// CYBER BOSS BATTLES
+{id:'cyber-boss-01',name:'[BOSS] THM: Complete "Jr Penetration Tester" path intro section',tag:'boss',xp:250,freq:'BOSS BATTLE',locked:true,done:false,criteria:'First section of Jr PenTester path complete. Write a methodology note: recon → scan → exploit → report.',difficulty:'B',prereq:'cyber-08'},
+{id:'cyber-boss-02',name:'[BOSS] Full CTF: Complete "Basic Pentesting" THM room solo',tag:'boss',xp:350,freq:'BOSS BATTLE',locked:true,done:false,criteria:'All flags. Document each step. No walkthroughs until after completion attempt.',difficulty:'B',prereq:'cyber-15'},
+
+// ─── ISC2 CC ─────────────────────────────────────────────
+{id:'isc2-01',name:'ISC2 CC: Read & summarize Domain 1 — Security Principles (Chapter 1)',tag:'isc2',xp:60,freq:'WEEKLY',locked:false,done:false,criteria:'Read official CC study guide chapter 1. Write 1-page summary. Cover: CIA triad, risk concepts, governance.',difficulty:'E',prereq:'None'},
+{id:'isc2-02',name:'ISC2 CC: Create flashcards for Domain 1 key terms (min 20 cards)',tag:'isc2',xp:40,freq:'SIDE QUEST',locked:false,done:false,criteria:'20+ flashcards covering: threats, vulnerabilities, risk, controls, policies. Use Anki or physical.',difficulty:'E',prereq:'isc2-01'},
+{id:'isc2-03',name:'ISC2 CC: Practice 15 MCQs on Domain 1 — score and review wrong answers',tag:'isc2',xp:50,freq:'WEEKLY',locked:false,done:false,criteria:'Use CC practice exam bank. Target 80%+. Review every wrong answer with explanation.',difficulty:'E',prereq:'isc2-02'},
+{id:'isc2-04',name:'ISC2 CC: Read & summarize Domain 2 — BC/DR/Incident Response',tag:'isc2',xp:65,freq:'WEEKLY',locked:false,done:false,criteria:'Cover: BCP vs DRP, RTO/RPO, incident response phases. 1-page summary.',difficulty:'E',prereq:'isc2-01'},
+{id:'isc2-05',name:'ISC2 CC: Scenario exercise — write an incident response plan for a ransomware attack',tag:'isc2',xp:80,freq:'SIDE QUEST',locked:false,done:false,criteria:'1-2 page document: detection → containment → eradication → recovery → lessons learned.',difficulty:'M',prereq:'isc2-04'},
+{id:'isc2-06',name:'ISC2 CC: Read & summarize Domain 3 — Access Control Concepts',tag:'isc2',xp:60,freq:'WEEKLY',locked:false,done:false,criteria:'Cover: DAC, MAC, RBAC, MFA, least privilege, zero trust intro. 1-page summary.',difficulty:'E',prereq:'isc2-03'},
+{id:'isc2-07',name:'ISC2 CC: Create access control scenario — identify correct model for 3 org scenarios',tag:'isc2',xp:70,freq:'SIDE QUEST',locked:false,done:false,criteria:'3 fictional organizations. Choose DAC/MAC/RBAC and justify. Minimum 3 sentences per case.',difficulty:'M',prereq:'isc2-06'},
+{id:'isc2-08',name:'ISC2 CC: Read & summarize Domain 4 — Network Security',tag:'isc2',xp:65,freq:'WEEKLY',locked:true,done:false,criteria:'Cover: firewalls, IDS/IPS, VPN, DMZ, network segmentation, TLS basics. 1-page summary.',difficulty:'E',prereq:'isc2-06'},
+{id:'isc2-09',name:'ISC2 CC: Connect Domain 4 concepts to your Nmap/Wireshark lab results',tag:'isc2',xp:75,freq:'SIDE QUEST',locked:true,done:false,criteria:'Write 1 page: how does your lab experience map to CC network security theory?',difficulty:'M',prereq:'isc2-08'},
+{id:'isc2-10',name:'ISC2 CC: Read & summarize Domain 5 — Security Operations',tag:'isc2',xp:65,freq:'WEEKLY',locked:true,done:false,criteria:'Cover: change management, data handling, logging, physical security, awareness training.',difficulty:'E',prereq:'isc2-08'},
+{id:'isc2-11',name:'ISC2 CC: Full 30-question practice exam across all 5 domains',tag:'isc2',xp:90,freq:'WEEKLY',locked:true,done:false,criteria:'Score + review. For any score below 75%: identify weakest domain and schedule targeted flashcard session.',difficulty:'M',prereq:'isc2-10'},
+{id:'isc2-12',name:'ISC2 CC: Domain 1+2 revision sprint — flashcards + 10 MCQ each',tag:'isc2',xp:60,freq:'WEEKLY',locked:true,done:false,criteria:'All 20 MCQ done. Score minimum 80% or redo. Mark weak cards.',difficulty:'E',prereq:'isc2-05'},
+{id:'isc2-13',name:'ISC2 CC: Domain 3+4 revision sprint — flashcards + 10 MCQ each',tag:'isc2',xp:65,freq:'WEEKLY',locked:true,done:false,criteria:'All 20 MCQ done. Score minimum 80% or redo.',difficulty:'E',prereq:'isc2-09'},
+
+// ISC2 BOSS
+{id:'isc2-boss-01',name:'[BOSS] ISC2 CC Mock Exam — 50 questions, timed (60 min)',tag:'boss',xp:300,freq:'BOSS BATTLE',locked:true,done:false,criteria:'Full timed mock. Target 75%+. If below: identify two weakest domains and generate 3 targeted tasks.',difficulty:'B',prereq:'isc2-11'},
+
+// ─── CONSISTENCY ───────────────────────────────────────
+{id:'con-01',name:'Gym: Complete today\'s session (any split)',tag:'consistency',xp:25,freq:'DAILY',locked:false,done:false,criteria:'Any gym session completed. Log it.',difficulty:'E',prereq:'None'},
+{id:'con-02',name:'Deep Work: 90-minute focused block, phone in another room',tag:'consistency',xp:30,freq:'DAILY',locked:false,done:false,criteria:'1 × 90-min block. No social media open. Task must be from active quests.',difficulty:'E',prereq:'None'},
+{id:'con-03',name:'Sleep: In bed by 12:30 AM',tag:'consistency',xp:20,freq:'DAILY',locked:false,done:false,criteria:'Lights out by 12:30. No negotiation.',difficulty:'E',prereq:'None'},
+{id:'con-04',name:'LOCK_IN Mode: Complete 1 active quest with zero distractions',tag:'consistency',xp:35,freq:'DAILY',locked:false,done:false,criteria:'Pick ONE quest. Finish it. No multitasking. Use when feeling overwhelmed.',difficulty:'E',prereq:'None'},
+{id:'con-05',name:'Recovery Day: 20-min walk + review your progress notes, no new tasks',tag:'consistency',xp:20,freq:'SIDE QUEST',locked:false,done:false,criteria:'Walk done. Read your last 3 log entries. No new problem solving. Use on low-energy days.',difficulty:'E',prereq:'None'},
+{id:'con-06',name:'No Doomscroll: End day with under 30 min total social media',tag:'consistency',xp:25,freq:'DAILY',locked:false,done:false,criteria:'Self-reported. Use screen time stats on phone to verify.',difficulty:'E',prereq:'None'},
+{id:'con-07',name:'Weekly Review: 15-min review of what you completed this week',tag:'consistency',xp:40,freq:'WEEKLY',locked:false,done:false,criteria:'Write 3 bullets: what went well, what didn\'t, one adjustment for next week.',difficulty:'E',prereq:'None'},
+{id:'con-08',name:'Streak Guard: Complete at least 1 quest if you\'re about to break your streak',tag:'consistency',xp:15,freq:'DAILY',locked:false,done:false,criteria:'Any 1 completed task counts. Minimum viable progress.',difficulty:'E',prereq:'None'},
+];
+
+// ════════════════════════════════════════════════════════════
+// DEFAULT STATE (fresh zero)
+// ════════════════════════════════════════════════════════════
+function freshState(){
+  return {
+    totalXP:0, streak:0, questsDone:0,
+    xpHistory:[0,0,0,0,0,0,0],
+    skills:{dsa:0,cyber:0,isc2:0,debug:0,health:0,linux:0},
+    log:[{t:nowT(),msg:'[SYS] OPERATOR HQ initialized. Season 01 begins.',xp:null,type:'sys'}],
+    quests:JSON.parse(JSON.stringify(MASTER_QUESTS)),
+    notionToken:'',
+    notionDbId:'',
+    version:3
+  };
+}
+
+function nowT(){const n=new Date();return n.getHours()+':'+(n.getMinutes()<10?'0':'')+n.getMinutes()}
+
+// ════════════════════════════════════════════════════════════
+// PERSISTENCE
+// ════════════════════════════════════════════════════════════
+function saveState(){
+  try{
+    localStorage.setItem(SAVE_KEY,JSON.stringify(G));
+    document.getElementById('save-status').innerHTML='AUTOSAVE: <span class="ok">●</span> '+nowT();
+  }catch(e){}
+}
+function loadState(){
+  try{
+    const r=localStorage.getItem(SAVE_KEY);
+    if(r){const d=JSON.parse(r);if(d.version===3)return d;}
+  }catch(e){}
+  return freshState();
+}
+
+let G=loadState();
+// Reset old v2 data automatically if found (version mismatch already handled above)
+
+// ════════════════════════════════════════════════════════════
+// MATH
+// ════════════════════════════════════════════════════════════
+function getLevel(xp){for(let i=LVL_XP.length-1;i>=0;i--)if(xp>=LVL_XP[i])return i;return 0}
+function getRank(xp){for(let i=RANKS.length-1;i>=0;i--)if(xp>=RANKS[i][0])return RANKS[i][1];return'SYS_NOVICE'}
+function getSkillLv(xp){for(let i=SKILL_XP.length-1;i>=0;i--)if(xp>=SKILL_XP[i])return i+1;return 1}
+function getSkillPct(xp){const lv=getSkillLv(xp)-1;const lo=SKILL_XP[lv]||0;const hi=SKILL_XP[lv+1]||lo+200;return Math.min(100,Math.round((xp-lo)/(hi-lo)*100))}
+function getXPBar(xp){const lv=getLevel(xp);const lo=LVL_XP[lv]||0;const hi=LVL_XP[lv+1]||lo+300;const pct=Math.min(100,Math.round((xp-lo)/(hi-lo)*100));const f=Math.round(pct/10);return{pct,lo,hi,lv,toNext:hi-xp,bar:'▓'.repeat(f)+'░'.repeat(10-f)}}
+function applyBuffs(xp){return Math.round(xp*BUFF)}
+function activeCount(){return G.quests.filter(q=>!q.locked&&!q.done&&q.freq!=='BOSS BATTLE').length}
+
+// ════════════════════════════════════════════════════════════
+// UI UPDATE
+// ════════════════════════════════════════════════════════════
+function updateUI(){
+  const xp=G.totalXP;
+  const{pct,lo,lv,toNext,bar}=getXPBar(xp);
+  document.getElementById('lvl').textContent=lv;
+  document.getElementById('rank').textContent=getRank(xp);
+  document.getElementById('xp-curr').textContent=(xp-lo).toLocaleString();
+  document.getElementById('xp-next').textContent=toNext.toLocaleString();
+  document.getElementById('xp-fill').style.width=pct+'%';
+  document.getElementById('xp-txt').textContent=bar+' '+pct+'%';
+  document.getElementById('s-xp').textContent=xp.toLocaleString();
+  document.getElementById('s-done').textContent=G.questsDone;
+  document.getElementById('s-streak').textContent=G.streak;
+  document.getElementById('streak-big').textContent=G.streak;
+  const tsl=Object.values(G.skills).reduce((a,v)=>a+getSkillLv(v),0);
+  document.getElementById('s-skills').textContent=tsl;
+  Object.entries(SKILL_META).forEach(([k,m])=>{
+    const b=document.getElementById(m.bar);const v=document.getElementById(m.val);
+    if(b)b.style.width=getSkillPct(G.skills[k])+'%';
+    if(v)v.textContent='LV'+getSkillLv(G.skills[k]);
+  });
+  const actv=G.quests.filter(q=>!q.locked);
+  const done=actv.filter(q=>q.done).length;
+  const dpct=actv.length?Math.round(done/actv.length*100):0;
+  document.getElementById('ring-pct').textContent=dpct+'%';
+  document.getElementById('ring-sub').textContent=done+'/'+actv.length;
+  drawRing(dpct);
+  document.getElementById('xp-rate').textContent='+'+G.xpHistory[6];
+  const ac=activeCount();
+  document.getElementById('active-count').textContent=ac;
+  document.getElementById('sb-active').textContent=ac+' / '+MAX_ACTIVE;
+  const ind=document.getElementById('active-indicator');
+  if(ac>=MAX_ACTIVE){ind.innerHTML='<span class="active-badge ab-warn">⚠ MAX ACTIVE REACHED</span>'}
+  else{ind.innerHTML='<span class="active-badge ab-ok">SLOTS: '+(MAX_ACTIVE-ac)+' FREE</span>'}
+  updateChart();
+  renderRightPanel();
+  renderLog();
+  renderAllViews();
+  renderSkillTree();
+  updateNotionUI();
+}
+
+// ════════════════════════════════════════════════════════════
+// RING
+// ════════════════════════════════════════════════════════════
+let ringCtx;
+function drawRing(pct){
+  if(!ringCtx)ringCtx=document.getElementById('ring').getContext('2d');
+  const c=ringCtx,cx=60,cy=60,r=46,lw=9;
+  c.clearRect(0,0,120,120);
+  c.beginPath();c.arc(cx,cy,r,0,Math.PI*2);c.strokeStyle='rgba(0,255,136,.07)';c.lineWidth=lw;c.stroke();
+  if(pct>0){
+    const g=c.createLinearGradient(cx-r,cy,cx+r,cy);
+    g.addColorStop(0,'#00ff88');g.addColorStop(1,'#00e5ff');
+    c.beginPath();c.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*(pct/100));
+    c.strokeStyle=g;c.lineWidth=lw;c.lineCap='round';c.stroke();
+  }
+  c.fillStyle='rgba(0,255,136,.9)';c.font='bold 13px Orbitron,monospace';c.textAlign='center';c.textBaseline='middle';c.fillText(pct+'%',cx,cy);
+}
+
+// ════════════════════════════════════════════════════════════
+// CHART
+// ════════════════════════════════════════════════════════════
+let chart;
+function initChart(){
+  chart=new Chart(document.getElementById('linechart'),{
+    type:'line',
+    data:{labels:['D-6','D-5','D-4','D-3','D-2','D-1','TODAY'],datasets:[{label:'XP',data:[...G.xpHistory],borderColor:'#00ff88',backgroundColor:'rgba(0,255,136,.05)',borderWidth:1.5,pointBackgroundColor:'#00e5ff',pointRadius:3,fill:true,tension:.4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#0c1018',borderColor:'rgba(0,255,136,.3)',borderWidth:1,titleFont:{family:'monospace',size:8},bodyFont:{family:'monospace',size:8}}},scales:{x:{ticks:{color:'#3a5a48',font:{size:8,family:'monospace'}},grid:{color:'rgba(0,255,136,.04)'}},y:{ticks:{color:'#3a5a48',font:{size:8,family:'monospace'}},grid:{color:'rgba(0,255,136,.04)'},beginAtZero:true}}}
+  });
+}
+function updateChart(){if(chart){chart.data.datasets[0].data=[...G.xpHistory];chart.update('none')}}
+
+// ════════════════════════════════════════════════════════════
+// QUEST CARD BUILDER
+// ════════════════════════════════════════════════════════════
+const tagCls={dsa:'tdsa',cyber:'tcyber',isc2:'tisc2',boss:'tboss',linux:'tlinux',debug:'tcyber',consistency:'tconsistency',health:'thealth',backend:'tbackend'};
+const freqColor={DAILY:'var(--green2)',WEEKLY:'var(--cyan)','SIDE QUEST':'var(--muted2)','BOSS BATTLE':'var(--red)',BACKLOG:'var(--muted)'};
+
+function buildCard(q,showTick=true){
+  const tc=tagCls[q.tag]||'tdsa';
+  const isBoss=q.freq==='BOSS BATTLE';
+  const status=q.done?'[DECRYPTED]':q.locked?'[LOCKED]':isBoss?'[BOSS]':'[ACTIVE]';
+  const sc=q.done?'sdone':q.locked?'slocked':isBoss?'sboss':'sif';
+  const d=document.createElement('div');
+  d.className='qcard'+(q.done?' done':'')+(q.locked?' locked':'')+(isBoss?' boss-card':'');
+  d.innerHTML=`
+    <div class="qtop">
+      <span class="qname">${q.name}</span>
+      <span class="qxp">+${q.xp} XP</span>
+    </div>
+    <div class="qmeta">
+      <span class="qtag ${tc}">${q.tag.toUpperCase()}</span>
+      <span class="qstatus ${sc}">${status}</span>
+      <span class="qfreq" style="color:${freqColor[q.freq]||'var(--muted)'}">${q.freq}</span>
+    </div>
+    ${q.criteria?`<div style="font-size:8px;color:var(--muted);margin-top:5px;line-height:1.5;border-top:1px solid var(--border);padding-top:4px">${q.criteria}</div>`:''}
+    ${showTick?`<div class="qtick${q.done?' ticked':''}" data-id="${q.id}">${q.done?'✓':''}</div>`:''}
+  `;
+  if(showTick&&!q.locked&&!q.done){
+    const tick=d.querySelector('.qtick');
+    if(tick){
+      tick.addEventListener('click',e=>{e.stopPropagation();completeQuest(q.id,e)});
+      tick.addEventListener('mouseenter',function(){this.textContent='✓'});
+      tick.addEventListener('mouseleave',function(){if(!G.quests.find(x=>x.id===q.id)?.done)this.textContent=''});
+    }
+  }
+  return d;
+}
+
+// ════════════════════════════════════════════════════════════
+// RIGHT PANEL (active missions)
+// ════════════════════════════════════════════════════════════
+function renderRightPanel(){
+  const el=document.getElementById('right-quest-list');
+  el.innerHTML='';
+  const active=G.quests.filter(q=>!q.done&&!q.locked).slice(0,8);
+  active.forEach(q=>el.appendChild(buildCard(q)));
+}
+
+// ════════════════════════════════════════════════════════════
+// VIEW RENDERERS
+// ════════════════════════════════════════════════════════════
+function renderView(viewId,containerId,filterTags,filterGroupId){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  let activeFilter='all';
+  const filterBtns=document.querySelectorAll(`#${filterGroupId} .ql-filter`);
+  filterBtns.forEach(b=>{if(b.classList.contains('active'))activeFilter=b.dataset.f});
+  let quests=G.quests.filter(q=>{
+    if(filterTags&&filterTags.length&&!filterTags.includes(q.tag))return false;
+    if(activeFilter!=='all'&&q.tag!==activeFilter)return false;
+    return true;
+  });
+  el.innerHTML='';
+  quests.forEach(q=>el.appendChild(buildCard(q)));
+}
+
+function renderAllViews(){
+  // Quest Log — all quests with filter
+  renderView('questlog','ql-questlog',null,'ql-filters-questlog');
+  // Lab Vault — cyber + linux + isc2
+  renderView('labvault','ql-labvault',['cyber','linux','isc2','boss'],'ql-filters-labvault');
+  // Gym Terminal — consistency + health
+  const gymEl=document.getElementById('ql-gym');
+  if(gymEl){
+    gymEl.innerHTML='';
+    G.quests.filter(q=>q.tag==='consistency'||q.tag==='health').forEach(q=>gymEl.appendChild(buildCard(q)));
+  }
+  // Archive — done quests
+  const archEl=document.getElementById('ql-archive');
+  const archEmpty=document.getElementById('archive-empty');
+  if(archEl){
+    archEl.innerHTML='';
+    const done=G.quests.filter(q=>q.done);
+    done.forEach(q=>archEl.appendChild(buildCard(q,false)));
+    if(archEmpty)archEmpty.style.display=done.length?'none':'block';
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// SKILL TREE
+// ════════════════════════════════════════════════════════════
+function renderSkillTree(){
+  const el=document.getElementById('st-grid');
+  if(!el)return;
+  el.innerHTML='';
+  Object.entries(SKILL_META).forEach(([k,m])=>{
+    const xp=G.skills[k]||0;const lv=getSkillLv(xp);const pct=getSkillPct(xp);
+    const lvIdx=lv-1;const nxt=SKILL_XP[lvIdx+1];
+    const n=document.createElement('div');
+    n.className='snode';
+    n.innerHTML=`<div class="sn-ico">${m.icon}</div><div class="sn-nm">${m.name}</div><div class="sn-lv">LV${lv}</div><div class="sn-xp">${xp.toLocaleString()} XP</div><div class="sn-bar"><div class="sn-fill" style="width:${pct}%;background:${m.color}"></div></div><div class="sn-nxt">${nxt?('▲ '+(nxt-xp)+' to LV'+(lv+1)):'⭐ MAX'}</div>`;
+    el.appendChild(n);
+  });
+  const logEl=document.getElementById('skill-log-panel');
+  if(logEl){
+    const sk=G.log.filter(e=>e.type==='xp').slice(-5).reverse().map(e=>`<div style="color:var(--muted2)">${e.t} — ${e.msg} <span style="color:var(--amber)">${e.xp||''}</span></div>`).join('');
+    logEl.innerHTML=sk||`<div style="color:var(--muted)">No XP events yet. Complete quests to earn skill XP.</div>`;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// LOG
+// ════════════════════════════════════════════════════════════
+function renderLog(){
+  const el=document.getElementById('log-list');
+  el.innerHTML='';
+  [...G.log].reverse().slice(0,12).forEach(e=>{
+    const d=document.createElement('div');
+    d.className='log-entry '+(e.type==='xp'?'le-xp':e.type==='boss'?'le-boss':'le-sys');
+    d.innerHTML=`<div class="log-time">${e.t}</div><div class="log-txt">${e.msg}${e.xp?` <span class="log-xp">${e.xp}</span>`:''}</div>`;
+    el.appendChild(d);
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// COMPLETE QUEST
+// ════════════════════════════════════════════════════════════
+function completeQuest(id,e){
+  const q=G.quests.find(x=>x.id===id);
+  if(!q||q.done||q.locked)return;
+  const prevLv=getLevel(G.totalXP);
+  const earned=applyBuffs(q.xp);
+  q.done=true;
+  G.totalXP+=earned;
+  G.questsDone++;
+  G.xpHistory[6]+=earned;
+  // Skill XP distribution
+  const skillMap={dsa:'dsa',cyber:'cyber',isc2:'isc2',debug:'debug',health:'health',linux:'linux',consistency:'health',boss:'dsa'};
+  const sk=skillMap[q.tag];
+  if(sk&&G.skills[sk]!==undefined)G.skills[sk]+=earned;
+  // Unlock next in sequence
+  const idx=MASTER_QUESTS.findIndex(x=>x.id===id);
+  if(idx>=0&&idx<MASTER_QUESTS.length-1){
+    const nextId=MASTER_QUESTS[idx+1].id;
+    const nextQ=G.quests.find(x=>x.id===nextId);
+    if(nextQ&&nextQ.locked&&nextQ.prereq===id)nextQ.locked=false;
+  }
+  const isBoss=q.freq==='BOSS BATTLE';
+  G.log.push({t:nowT(),msg:(isBoss?'[BOSS SLAIN] ':'[DECRYPTED] ')+q.name,xp:'+'+earned+' XP',type:isBoss?'boss':'xp'});
+  floatXP(earned,e.target);
+  notify((isBoss?'◈ BOSS SLAIN ◈ ':'QUEST DECRYPTED // ')+'+'+earned+' XP BANKED'+(earned!==q.xp?' (BUFF ×'+(BUFF.toFixed(2))+')':''));
+  const newLv=getLevel(G.totalXP);
+  if(newLv>prevLv)setTimeout(()=>lvlFlash(newLv),280);
+  updateUI();
+  saveState();
+}
+
+// ════════════════════════════════════════════════════════════
+// ANIMATIONS
+// ════════════════════════════════════════════════════════════
+function floatXP(xp,el){
+  const r=el.getBoundingClientRect();
+  const p=document.createElement('div');
+  p.className='xp-pop';p.textContent='+'+xp+' XP';
+  p.style.cssText=`left:${r.left+r.width/2-26}px;top:${r.top-10}px`;
+  document.body.appendChild(p);
+  setTimeout(()=>p.remove(),1500);
+}
+function notify(msg){
+  const n=document.getElementById('notify');
+  n.textContent=msg;n.classList.add('show');
+  clearTimeout(notify._t);
+  notify._t=setTimeout(()=>n.classList.remove('show'),3000);
+}
+function lvlFlash(lv){
+  const d=document.createElement('div');
+  d.className='lvl-flash';
+  d.innerHTML=`<div class="lvl-flash-inner">◈ LEVEL UP // LV${lv} ◈</div>`;
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(),2600);
+}
+
+// ════════════════════════════════════════════════════════════
+// ADD QUEST MODAL
+// ════════════════════════════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+
+document.getElementById('add-btn').addEventListener('click',()=>openModal('quest-modal'));
+document.getElementById('modal-close').addEventListener('click',()=>closeModal('quest-modal'));
+document.getElementById('quest-modal').addEventListener('click',e=>{if(e.target.id==='quest-modal')closeModal('quest-modal')});
+document.getElementById('modal-submit').addEventListener('click',()=>{
+  const name=document.getElementById('q-name').value.trim();
+  if(!name)return;
+  const xp=Math.max(10,Math.min(600,parseInt(document.getElementById('q-xp').value)||50));
+  const tag=document.getElementById('q-tag').value;
+  const freq=document.getElementById('q-freq').value;
+  const locked=document.getElementById('q-locked').value==='locked';
+  const criteria=document.getElementById('q-criteria').value.trim();
+  G.quests.push({id:'custom-'+Date.now(),name,tag,xp,freq,locked,done:false,criteria,difficulty:'E',prereq:'None'});
+  closeModal('quest-modal');
+  document.getElementById('q-name').value='';
+  document.getElementById('q-criteria').value='';
+  G.log.push({t:nowT(),msg:'[INJ] Quest added: '+name,xp:null,type:'sys'});
+  updateUI();saveState();
+  notify('QUEST INJECTED // MISSION QUEUED');
+});
+
+// ════════════════════════════════════════════════════════════
+// FILTER LISTENERS (generic)
+// ════════════════════════════════════════════════════════════
+function bindFilters(groupId,renderFn){
+  document.querySelectorAll(`#${groupId} .ql-filter`).forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll(`#${groupId} .ql-filter`).forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      renderFn();
+    });
+  });
+}
+bindFilters('ql-filters-questlog',()=>renderAllViews());
+bindFilters('ql-filters-labvault',()=>renderAllViews());
+
+// ════════════════════════════════════════════════════════════
+// NAV
+// ════════════════════════════════════════════════════════════
+document.querySelectorAll('.nav-item[data-view]').forEach(item=>{
+  item.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    item.classList.add('active');
+    const v=item.dataset.view;
+    document.querySelectorAll('.view').forEach(vw=>vw.classList.remove('active'));
+    const tgt=document.getElementById('view-'+v);
+    if(tgt)tgt.classList.add('active');
+    if(v==='skilltree')renderSkillTree();
+    if(['questlog','labvault','gym','archive'].includes(v))renderAllViews();
+    if(window.innerWidth<=780)document.getElementById('sidebar').classList.remove('open');
+  });
+});
+
+// ════════════════════════════════════════════════════════════
+// RESET
+// ════════════════════════════════════════════════════════════
+document.getElementById('reset-btn').addEventListener('click',()=>{
+  if(confirm('⚠ WIPE ALL SAVE DATA? This resets XP, quests, and log to zero. Cannot be undone.')){
+    localStorage.removeItem(SAVE_KEY);
+    G=freshState();
+    updateUI();
+    notify('⚠ SYSTEM WIPED — OPERATOR REBORN FROM ZERO');
+  }
+});
+
+// ════════════════════════════════════════════════════════════
+// CLEAR LOG
+// ════════════════════════════════════════════════════════════
+document.getElementById('clr-log').addEventListener('click',()=>{
+  G.log=[{t:nowT(),msg:'[SYS] Log cleared.',xp:null,type:'sys'}];
+  renderLog();saveState();
+});
+
+// ════════════════════════════════════════════════════════════
+// MOBILE HAM
+// ════════════════════════════════════════════════════════════
+document.getElementById('ham-btn').addEventListener('click',()=>{
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('right').classList.remove('open');
+});
+document.getElementById('mob-panel-btn').addEventListener('click',()=>{
+  document.getElementById('right').classList.toggle('open');
+  document.getElementById('sidebar').classList.remove('open');
+});
+function checkMobile(){
+  const m=window.innerWidth<=780;
+  document.getElementById('mob-panel-btn').style.display=m?'block':'none';
+}
+window.addEventListener('resize',checkMobile);checkMobile();
+
+// ════════════════════════════════════════════════════════════
+// NOTION BRIDGE
+// ════════════════════════════════════════════════════════════
+function updateNotionUI(){
+  const connected=!!G.notionToken;
+  const statusEl=document.getElementById('notion-status');
+  const rightEl=document.getElementById('notion-right-status');
+  if(statusEl)statusEl.innerHTML=connected?'<span style="color:var(--green)">⬤ CONNECTED</span>':'<span style="color:var(--muted)">⬤ DISCONNECTED</span>';
+  if(rightEl&&connected)rightEl.innerHTML=`<div style="color:var(--green2)">⬤ Notion bridge active</div><div style="font-size:8px;color:var(--muted);margin-top:5px">Token stored in localStorage. Data is local-only.</div>`;
+}
+
+document.getElementById('notion-connect-btn').addEventListener('click',()=>openModal('notion-modal'));
+document.getElementById('notion-modal-close').addEventListener('click',()=>closeModal('notion-modal'));
+document.getElementById('notion-modal').addEventListener('click',e=>{if(e.target.id==='notion-modal')closeModal('notion-modal')});
+
+document.getElementById('notion-save-btn').addEventListener('click',async()=>{
+  const token=document.getElementById('notion-token-input').value.trim();
+  const dbId=document.getElementById('notion-db-input').value.trim().replace(/-/g,'');
+  const res=document.getElementById('notion-test-result');
+  if(!token){res.textContent='⚠ Token required.';return}
+  res.textContent='Testing connection...';
+  try{
+    const r=await fetch('https://api.notion.com/v1/users/me',{
+      headers:{'Authorization':'Bearer '+token,'Notion-Version':'2022-06-28'}
+    });
+    if(r.ok){
+      G.notionToken=token;
+      G.notionDbId=dbId;
+      saveState();
+      closeModal('notion-modal');
+      updateNotionUI();
+      notify('◈ NOTION BRIDGE ACTIVE — CONNECTION VERIFIED');
+    }else{
+      res.textContent='⚠ Connection failed ('+r.status+'). Check token.';
+    }
+  }catch(err){
+    res.textContent='⚠ Network error. Check CORS / token validity.';
+  }
+});
+
+// ════════════════════════════════════════════════════════════
+// CLOCK + UPTIME
+// ════════════════════════════════════════════════════════════
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=n.toTimeString().slice(0,8)+' // LIVE';
+  const day=Math.max(1,Math.ceil((Date.now()-new Date('2026-05-01'))/86400000));
+  document.getElementById('uptime').textContent='S1 // DAY '+String(day).padStart(2,'0');
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+drawRing(0);
+tick();
+setInterval(tick,1000);
+setInterval(saveState,30000);
+initChart();
+updateUI();
+</script>
+</body>
+</html>
