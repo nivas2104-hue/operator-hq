@@ -2413,7 +2413,7 @@
               type: "sys",
             },
           ],
-          quests: JSON.parse(JSON.stringify(MASTER_QUESTS)),
+          quests: [],
           notionToken: "",
           notionDbId: "",
           version: 3,
@@ -3167,10 +3167,33 @@
             const data = await r.json();
 
             console.log(data);
-
             if (r.ok && data.results) {
               G.notionToken = token;
               G.notionDbId = dbId;
+
+              G.quests = data.results.map((q) => ({
+                id: q.id,
+                pageId: q.id,
+
+                name:
+                  q.properties.Name?.title?.[0]?.plain_text || "Untitled Quest",
+
+                xp: q.properties["Base XP"]?.number || 50,
+
+                done: q.properties.Status?.select?.name === "[03_DECRYPTED]",
+
+                freq: q.properties.Frequency?.select?.name || "DAILY",
+
+                tag: q.properties.Tag?.select?.name?.toLowerCase() || "misc",
+
+                locked: false,
+
+                criteria: "",
+
+                difficulty: "E",
+
+                prereq: "None",
+              }));
 
               saveState();
 
@@ -3178,7 +3201,9 @@
 
               updateNotionUI();
 
-              notify("◈ NOTION BRIDGE ACTIVE — CONNECTION VERIFIED");
+              render();
+
+              notify("◈ NOTION BRIDGE ACTIVE — LIVE SYNC ENABLED");
             } else {
               console.error(data);
 
