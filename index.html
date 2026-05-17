@@ -2871,6 +2871,9 @@
         const prevLv = getLevel(G.totalXP);
         const earned = applyBuffs(q.xp);
         q.done = true;
+        if (q.pageId && G.notionToken) {
+          saveQuestToNotion(q);
+        }
         G.totalXP += earned;
         G.questsDone++;
         G.xpHistory[6] += earned;
@@ -2934,6 +2937,28 @@
         n.classList.add("show");
         clearTimeout(notify._t);
         notify._t = setTimeout(() => n.classList.remove("show"), 3000);
+      }
+      async function saveQuestToNotion(q) {
+        try {
+          const r = await fetch("/.netlify/functions/notion", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              action: "update",
+              token: G.notionToken,
+              pageId: q.pageId,
+              completed: true,
+            }),
+          });
+
+          const data = await r.json();
+
+          console.log("NOTION SYNC:", data);
+        } catch (err) {
+          console.error("NOTION SYNC FAILED", err);
+        }
       }
       function lvlFlash(lv) {
         const d = document.createElement("div");
