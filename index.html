@@ -3306,6 +3306,70 @@
       if (G.notionToken && G.notionDbId) {
         connectToNotion(G.notionToken, G.notionDbId);
       }
+      setInterval(() => {
+        syncFromNotion();
+      }, 15000);
+      async function syncFromNotion() {
+        if (!G.notionToken || !G.notionDbId) return;
+
+        try {
+          const r = await fetch("/.netlify/functions/notion", {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json",
+            },
+
+            body: JSON.stringify({
+              token: G.notionToken,
+              databaseId: G.notionDbId,
+            }),
+          });
+
+          const data = await r.json();
+
+          if (!r.ok || !data.results) return;
+
+          const incoming = data.results.map((q) => ({
+            id: q.id,
+            pageId: q.id,
+
+            name:
+              q.properties["Quest Name"]?.title?.[0]?.plain_text ||
+              "Untitled Quest",
+
+            xp: q.properties["Base XP"]?.number || 50,
+
+            done: q.properties.Status?.select?.name === "[03_DECRYPTED]",
+
+            freq: q.properties["Quest Type"]?.select?.name || "QUEST",
+
+            tag:
+              q.properties[
+                "Skill Domain"
+              ]?.multi_select?.[0]?.name?.toLowerCase() || "misc",
+
+            locked: false,
+
+            criteria: q.properties.Notes?.rich_text?.[0]?.plain_text || "",
+
+            difficulty: q.properties.Difficulty?.select?.name || "E",
+
+            prereq: "None",
+          }));
+
+          // preserve local XP/stats
+          G.quests = incoming;
+
+          saveState();
+
+          updateUI();
+
+          console.log("LIVE SYNC COMPLETE");
+        } catch (err) {
+          console.error("SYNC FAILED", err);
+        }
+      }
       // ════════════════════════════════════════════════════════════
       // CLOCK + UPTIME
       // ════════════════════════════════════════════════════════════

@@ -2,14 +2,43 @@ exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body);
 
-    // ─────────────────────────────────────
+    // FETCH DATABASE
+    if (body.databaseId) {
+      const response = await fetch(
+        `https://api.notion.com/v1/databases/${body.databaseId}/query`,
+        {
+          method: "POST",
+
+          headers: {
+            Authorization: `Bearer ${body.token}`,
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const data = await response.json();
+
+      return {
+        statusCode: 200,
+
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+
+        body: JSON.stringify(data),
+      };
+    }
+
     // UPDATE QUEST STATUS
-    // ─────────────────────────────────────
     if (body.action === "update") {
+      const statusName = body.completed ? "[03_DECRYPTED]" : "[01_ACTIVE]";
+
       const response = await fetch(
         `https://api.notion.com/v1/pages/${body.pageId}`,
         {
           method: "PATCH",
+
           headers: {
             Authorization: `Bearer ${body.token}`,
             "Notion-Version": "2022-06-28",
@@ -20,7 +49,7 @@ exports.handler = async (event) => {
             properties: {
               Status: {
                 select: {
-                  name: "[03_DECRYPTED]",
+                  name: statusName,
                 },
               },
             },
@@ -32,45 +61,25 @@ exports.handler = async (event) => {
 
       return {
         statusCode: 200,
+
         headers: {
           "Access-Control-Allow-Origin": "*",
         },
+
         body: JSON.stringify(data),
       };
     }
 
-    // ─────────────────────────────────────
-    // FETCH QUESTS
-    // ─────────────────────────────────────
-    const { token, databaseId } = body;
-
-    const response = await fetch(
-      `https://api.notion.com/v1/databases/${databaseId}/query`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Notion-Version": "2022-06-28",
-          "Content-Type": "application/json",
-        },
-      },
-    );
-
-    const data = await response.json();
-
     return {
-      statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify(data),
+      statusCode: 400,
+      body: JSON.stringify({
+        error: "Invalid request",
+      }),
     };
   } catch (err) {
     return {
       statusCode: 500,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
+
       body: JSON.stringify({
         error: err.message,
       }),
