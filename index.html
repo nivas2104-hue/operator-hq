@@ -2440,11 +2440,20 @@
       function loadState() {
         try {
           const r = localStorage.getItem(SAVE_KEY);
+
           if (r) {
             const d = JSON.parse(r);
-            if (d.version === 3) return d;
+
+            if (d.version === 3) {
+              if (d.quests?.length && d.quests[0]?.id === "dsa-01") {
+                d.quests = [];
+              }
+
+              return d;
+            }
           }
         } catch (e) {}
+
         return freshState();
       }
 
