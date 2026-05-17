@@ -2,10 +2,9 @@ exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body);
 
-    // =========================
-    // UPDATE QUEST
-    // =========================
-
+    // ─────────────────────────────────────
+    // UPDATE QUEST STATUS
+    // ─────────────────────────────────────
     if (body.action === "update") {
       const response = await fetch(
         `https://api.notion.com/v1/pages/${body.pageId}`,
@@ -16,6 +15,7 @@ exports.handler = async (event) => {
             "Notion-Version": "2022-06-28",
             "Content-Type": "application/json",
           },
+
           body: JSON.stringify({
             properties: {
               Status: {
@@ -39,10 +39,9 @@ exports.handler = async (event) => {
       };
     }
 
-    // =========================
+    // ─────────────────────────────────────
     // FETCH QUESTS
-    // =========================
-
+    // ─────────────────────────────────────
     const { token, databaseId } = body;
 
     const response = await fetch(
@@ -69,6 +68,9 @@ exports.handler = async (event) => {
   } catch (err) {
     return {
       statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
       body: JSON.stringify({
         error: err.message,
       }),
