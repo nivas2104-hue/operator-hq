@@ -2876,16 +2876,32 @@
       // ════════════════════════════════════════════════════════════
       function completeQuest(id, e) {
         const q = G.quests.find((x) => x.id === id);
-        if (!q || q.done || q.locked) return;
+
+        if (!q || q.locked) return;
+
         const prevLv = getLevel(G.totalXP);
+
         const earned = applyBuffs(q.xp);
-        q.done = true;
+
+        // toggle state
+        q.done = !q.done;
+
+        // sync to notion
         if (q.pageId && G.notionToken) {
           saveQuestToNotion(q);
         }
-        G.totalXP += earned;
-        G.questsDone++;
-        G.xpHistory[6] += earned;
+
+        // XP add/remove
+        if (q.done) {
+          G.totalXP += earned;
+          G.questsDone++;
+          G.xpHistory[6] += earned;
+        } else {
+          G.totalXP -= earned;
+          G.questsDone--;
+          G.xpHistory[6] -= earned;
+        }
+
         // Skill XP distribution
         const skillMap = {
           dsa: "dsa",
@@ -2896,35 +2912,83 @@
           linux: "linux",
           consistency: "health",
           boss: "dsa",
+          backend: "linux",
+          cybersecurity: "cyber",
         };
+
         const sk = skillMap[q.tag];
-        if (sk && G.skills[sk] !== undefined) G.skills[sk] += earned;
-        // Unlock next in sequence
-        const idx = MASTER_QUESTS.findIndex((x) => x.id === id);
-        if (idx >= 0 && idx < MASTER_QUESTS.length - 1) {
-          const nextId = MASTER_QUESTS[idx + 1].id;
-          const nextQ = G.quests.find((x) => x.id === nextId);
-          if (nextQ && nextQ.locked && nextQ.prereq === id)
-            nextQ.locked = false;
+
+        if (sk && G.skills[sk] !== undefined) {
+          if (q.done) {
+            G.skills[sk] += earned;
+          } else {
+            G.skills[sk] -= earned;
+          }
+
+          // prevent negatives
+          if (G.skills[sk] < 0) {
+            G.skills[sk] = 0;
+          }
         }
-        const isBoss = q.freq === "BOSS BATTLE";
+
+        // Unlock next in sequence ONLY when completing
+        if (q.done) {
+          const idx = MASTER_QUESTS.findIndex((x) => x.id === id);
+
+          if (idx >= 0 && idx < MASTER_QUESTS.length - 1) {
+            const nextId = MASTER_QUESTS[idx + 1].id;
+
+            const nextQ = G.quests.find((x) => x.id === nextId);
+
+            if (nextQ && nextQ.locked && nextQ.prereq === id) {
+              nextQ.locked = false;
+            }
+          }
+        }
+
+        const isBoss = q.freq === "BOSS BATTLE" || q.freq === "Boss Battle";
+
         G.log.push({
           t: nowT(),
-          msg: (isBoss ? "[BOSS SLAIN] " : "[DECRYPTED] ") + q.name,
-          xp: "+" + earned + " XP",
-          type: isBoss ? "boss" : "xp",
+
+          msg:
+            (q.done
+              ? isBoss
+                ? "[BOSS SLAIN] "
+                : "[DECRYPTED] "
+              : "[ROLLED BACK] ") + q.name,
+
+          xp: (q.done ? "+" : "-") + earned + " XP",
+
+          type: q.done ? (isBoss ? "boss" : "xp") : "rollback",
         });
-        floatXP(earned, e.target);
+
+        if (q.done) {
+          floatXP(earned, e.target);
+        }
+
         notify(
-          (isBoss ? "◈ BOSS SLAIN ◈ " : "QUEST DECRYPTED // ") +
-            "+" +
-            earned +
-            " XP BANKED" +
-            (earned !== q.xp ? " (BUFF ×" + BUFF.toFixed(2) + ")" : ""),
+          q.done
+            ? (isBoss ? "◈ BOSS SLAIN ◈ " : "QUEST DECRYPTED // ") +
+                "+" +
+                earned +
+                " XP BANKED" +
+                (earned !== q.xp ? " (BUFF ×" + BUFF.toFixed(2) + ")" : "")
+            : "ROLLBACK COMPLETE // -" + earned + " XP REMOVED",
         );
+
+        // prevent negative totals
+        if (G.totalXP < 0) G.totalXP = 0;
+        if (G.questsDone < 0) G.questsDone = 0;
+
         const newLv = getLevel(G.totalXP);
-        if (newLv > prevLv) setTimeout(() => lvlFlash(newLv), 280);
+
+        if (newLv > prevLv) {
+          setTimeout(() => lvlFlash(newLv), 280);
+        }
+
         updateUI();
+
         saveState();
       }
 
