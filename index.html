@@ -3189,7 +3189,7 @@
 
                 name:
                   q.properties["Quest Name"]?.title?.[0]?.plain_text ||
-                  "Untitled Quest",
+                  "NO QUEST NAME",
 
                 xp: q.properties["Base XP"]?.number || 50,
 
@@ -3210,7 +3210,6 @@
 
                 prereq: "None",
               }));
-
               saveState();
 
               closeModal("notion-modal");
