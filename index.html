@@ -2705,6 +2705,25 @@
 
         return true;
       }
+      function normalizeTag(tag) {
+        tag = tag.toLowerCase();
+
+        if (tag.includes("cyber")) return "cyber";
+
+        if (tag.includes("isc2")) return "isc2";
+
+        if (tag.includes("consistency")) return "consistency";
+
+        if (tag.includes("health")) return "consistency";
+
+        if (tag.includes("backend")) return "backend";
+
+        if (tag.includes("debug")) return "debug";
+
+        if (tag.includes("dsa")) return "dsa";
+
+        return "misc";
+      }
       function buildCard(q, showTick = true) {
         const tc = tagCls[q.tag] || "tdsa";
         const isBoss = q.freq === "BOSS BATTLE" || q.freq === "Boss Battle";
@@ -3280,10 +3299,9 @@
 
               freq: q.properties["Quest Type"]?.select?.name || "QUEST",
 
-              tag:
-                q.properties[
-                  "Skill Domain"
-                ]?.multi_select?.[0]?.name?.toLowerCase() || "misc",
+              tag: normalizeTag(
+                q.properties["Skill Domain"]?.multi_select?.[0]?.name || "misc",
+              ),
 
               locked: false,
               requirements: {
@@ -3351,6 +3369,7 @@
       setInterval(() => {
         syncFromNotion();
       }, 15000);
+
       async function syncFromNotion() {
         if (!G.notionToken || !G.notionDbId) return;
 
@@ -3386,10 +3405,9 @@
 
             freq: q.properties["Quest Type"]?.select?.name || "QUEST",
 
-            tag:
-              q.properties[
-                "Skill Domain"
-              ]?.multi_select?.[0]?.name?.toLowerCase() || "misc",
+            tag: normalizeTag(
+              q.properties["Skill Domain"]?.multi_select?.[0]?.name || "misc",
+            ),
 
             locked: false,
             requirements: {
